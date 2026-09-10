@@ -17,6 +17,7 @@ export interface Pay {
   kind: string;
   fee: number;
   rank: number;
+  img?: string | null;
 }
 
 export interface Promo {

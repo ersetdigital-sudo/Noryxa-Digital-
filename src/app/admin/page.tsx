@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { rupiah } from "@/lib/data";
+import { uploadImage } from "@/lib/cloudinary";
 import type { Denom, Pay, Promo } from "@/lib/catalog";
 
 type Tab = "orders" | "products" | "denoms" | "pays" | "promos";
@@ -63,8 +64,11 @@ export default function AdminPage() {
   // add states
   const [np, setNp] = useState({ name: "", category: "Mobile Games", price: 0, img: "/images/3ba2d47c-f372-4e33-bbd8-712410f0f909.png", rank: 99, tags: "" });
   const [nd, setNd] = useState({ product_name: "Mobile Legends", label: "", price: 0, rank: 99 });
-  const [npay, setNpay] = useState({ label: "", kind: "E-wallet", fee: 0, rank: 99 });
+  const [npay, setNpay] = useState({ label: "", kind: "E-wallet", fee: 0, rank: 99, img: "" });
   const [npr, setNpr] = useState({ code: "", disc_pct: 10 });
+  const [uploading, setUploading] = useState("");
+  const addPayImgRef = useRef<HTMLInputElement>(null);
+  const editPayImgRef = useRef<HTMLInputElement>(null);
 
   const flash = (t: string) => {
     setMsg(t);
@@ -622,17 +626,44 @@ export default function AdminPage() {
                 </h2>
               </div>
               <div className="p-5">
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-                  <input className="field" placeholder="Label (mis. DANA)" value={npay.label} onChange={(e) => setNpay({ ...npay, label: e.target.value })} />
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                  <input className="field" placeholder="Label (mis. QRIS)" value={npay.label} onChange={(e) => setNpay({ ...npay, label: e.target.value })} />
                   <input className="field" placeholder="Jenis (E-wallet, dll)" value={npay.kind} onChange={(e) => setNpay({ ...npay, kind: e.target.value })} />
                   <input className="field" type="number" placeholder="Biaya" value={npay.fee} onChange={(e) => setNpay({ ...npay, fee: Number(e.target.value) })} />
                   <input className="field" type="number" placeholder="Rank" value={npay.rank} onChange={(e) => setNpay({ ...npay, rank: Number(e.target.value) })} />
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => addPayImgRef.current?.click()}
+                      disabled={uploading === "add"}
+                      className="shrink-0 border-2 border-[#eee] hover:border-[#ff385c] rounded-xl px-4 py-2.5 text-xs font-bold text-[#717171] hover:text-[#ff385c] transition"
+                    >
+                      {uploading === "add" ? "Uploading…" : npay.img ? "Ganti Gambar" : "Upload QRIS/Gambar"}
+                    </button>
+                    {npay.img && <img src={npay.img} alt="" className="w-10 h-10 rounded-lg object-cover border-2 border-[#eee]" />}
+                  </div>
+                  <input
+                    ref={addPayImgRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      setUploading("add");
+                      const url = await uploadImage(f);
+                      if (url) setNpay((p) => ({ ...p, img: url }));
+                      setUploading("");
+                      e.target.value = "";
+                    }}
+                  />
                 </div>
+                {npay.img && <p className="text-[11px] text-[#0a7d43] font-semibold mt-2">Gambar siap disimpan bersama metode.</p>}
                 <button
                   onClick={() => guard("add-pay", async () => {
                     if (!npay.label) throw new Error("kosong");
                     await supabase.from("pays").insert(npay);
-                    setNpay({ label: "", kind: "E-wallet", fee: 0, rank: 99 });
+                    setNpay({ label: "", kind: "E-wallet", fee: 0, rank: 99, img: "" });
                   }, "Metode ditambahkan")}
                   className="mt-3 bg-[#ff385c] hover:bg-[#e12b4d] transition text-white text-sm font-semibold rounded-full px-6 py-2.5"
                 >
@@ -649,10 +680,11 @@ export default function AdminPage() {
                 </h2>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[600px]">
+                <table className="w-full min-w-[680px]">
                   <thead className="border-b-2 border-[#eee] bg-[#fafafa]">
                     <tr>
                       <th className={th}>Metode</th>
+                      <th className={th}>Gambar</th>
                       <th className={th}>Jenis</th>
                       <th className={th}>Biaya</th>
                       <th className={th}>Rank</th>
@@ -667,6 +699,40 @@ export default function AdminPage() {
                             <input className="field !py-1.5 !px-2.5 text-xs w-36" value={editPay.label} onChange={(e) => setEditPay({ ...editPay, label: e.target.value })} />
                           ) : (
                             <span className="font-semibold">{y.label}</span>
+                          )}
+                        </td>
+                        <td className={td}>
+                          {editPay?.id === y.id ? (
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => editPayImgRef.current?.click()}
+                                disabled={uploading === y.id}
+                                className="text-xs font-bold text-[#ff385c] hover:underline whitespace-nowrap"
+                              >
+                                {uploading === y.id ? "Uploading…" : editPay.img ? "Ganti" : "Upload"}
+                              </button>
+                              {editPay.img && <img src={editPay.img} alt="" className="w-10 h-10 rounded-lg object-cover border-2 border-[#eee]" />}
+                              <input
+                                ref={editPayImgRef}
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp"
+                                className="hidden"
+                                onChange={async (e) => {
+                                  const f = e.target.files?.[0];
+                                  if (!f || !editPay) return;
+                                  setUploading(y.id);
+                                  const url = await uploadImage(f);
+                                  if (url) setEditPay({ ...editPay, img: url });
+                                  setUploading("");
+                                  e.target.value = "";
+                                }}
+                              />
+                            </div>
+                          ) : y.img ? (
+                            <img src={y.img} alt={y.label} className="w-10 h-10 rounded-lg object-cover border-2 border-[#eee]" />
+                          ) : (
+                            <span className="text-xs text-[#c9c9c9]">—</span>
                           )}
                         </td>
                         <td className={td}>

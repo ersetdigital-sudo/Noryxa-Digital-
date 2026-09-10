@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { rupiah } from "@/lib/data";
 import { saveOrder, updateOrderStatus } from "@/lib/orders";
+import { supabase } from "@/lib/supabase";
 
 const FAQ = [
   ["Berapa lama pesanan diproses?", "Rata-rata 3 detik setelah pembayaran terkonfirmasi. Saat jam sibuk maksimal 5 menit."],
@@ -101,6 +102,20 @@ export default function PaymentPage() {
 
   const isQris = /qris/i.test(pay);
   const isVA = /virtual|bank|va|bca|bni|bri|mandiri|permata/i.test(pay);
+
+  // fetch gambar QRIS dari tabel pays (Cloudinary)
+  const [payImg, setPayImg] = useState<string | null>(null);
+  useEffect(() => {
+    if (!isQris) return;
+    supabase
+      .from("pays")
+      .select("img")
+      .ilike("label", "%QRIS%")
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0 && data[0].img) setPayImg(data[0].img as string);
+      });
+  }, [isQris]);
 
   const timerStr =
     String(Math.floor(timeLeft / 60)).padStart(2, "0") +
@@ -230,6 +245,16 @@ export default function PaymentPage() {
               {isQris && (
                 <div className="text-center">
                   <div className="qr">
+                    {payImg ? (
+                      <img
+                        src={payImg}
+                        alt="Kode QRIS Noryxa Digital"
+                        width={176}
+                        height={176}
+                        className="rounded-xl object-cover"
+                        style={{ width: 176, height: 176 }}
+                      />
+                    ) : (
                     <svg viewBox="0 0 33 33" width="176" height="176" shapeRendering="crispEdges" aria-label="Kode QRIS">
                       <rect width="33" height="33" fill="#fff"></rect>
                       <g fill="#111">
@@ -374,6 +399,7 @@ export default function PaymentPage() {
                         <rect x="29" y="10" width="1" height="1"></rect>
                       </g>
                     </svg>
+                    )}
                   </div>
                   <p className="text-sm text-[#717171] mt-3">
                     Scan pakai GoPay, DANA, OVO, ShopeePay, atau m-banking apa pun.
