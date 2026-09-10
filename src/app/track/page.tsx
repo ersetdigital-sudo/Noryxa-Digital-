@@ -3,17 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { rupiah } from "@/lib/data";
-
-interface Order {
-  inv: string;
-  product: string;
-  denom: string;
-  uid: string;
-  pay: string;
-  total: number;
-  status: string;
-  created: number;
-}
+import { findOrderByInv, type Order } from "@/lib/orders";
 
 const WA = "6281234567890";
 
@@ -35,7 +25,7 @@ export default function TrackPage() {
   const resultRef = useRef<HTMLElement | null>(null);
   const notFoundRef = useRef<HTMLElement | null>(null);
 
-  const lookup = useCallback((raw: string) => {
+  const lookup = useCallback(async (raw: string) => {
     const v = (raw || "").trim().toUpperCase();
     if (!v) {
       setError("Masukkan nomor invoice dulu ya.");
@@ -46,10 +36,18 @@ export default function TrackPage() {
       return;
     }
     setError("");
-    const orders = getOrders();
-    const o = orders.find((x) => x.inv === v);
-    if (o) {
-      setResultOrder(o);
+
+    // Supabase first, fallback ke localStorage
+    const remote = await findOrderByInv(v);
+    if (remote) {
+      setResultOrder(remote);
+      setNotFound(false);
+      return;
+    }
+
+    const local = getOrders().find((x) => x.inv === v);
+    if (local) {
+      setResultOrder(local);
       setNotFound(false);
     } else {
       setResultOrder(null);

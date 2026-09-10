@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { rupiah } from "@/lib/data";
+import { saveOrder, updateOrderStatus } from "@/lib/orders";
 
 const FAQ = [
   ["Berapa lama pesanan diproses?", "Rata-rata 3 detik setelah pembayaran terkonfirmasi. Saat jam sibuk maksimal 5 menit."],
@@ -60,12 +61,24 @@ export default function PaymentPage() {
     setInv(i);
     setCreated(new Date().toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" }));
 
+    let email: string | null = null;
     try {
-      const all = JSON.parse(localStorage.getItem("noryxaOrders") || "[]");
-      const rec = { inv: i, product: get("product", "Mobile Legends"), denom: get("denom", "86 Diamonds"), uid: get("uid", "—"), pay: p, base: b, fee: f, disc: dc, total: t, status: "Menunggu pembayaran", created: Date.now() };
-      all.unshift(rec);
-      localStorage.setItem("noryxaOrders", JSON.stringify(all.slice(0, 30)));
+      const u = JSON.parse(localStorage.getItem("noryxaUser") || "null");
+      if (u?.email) email = u.email;
     } catch {}
+
+    saveOrder({
+      inv: i,
+      product: get("product", "Mobile Legends"),
+      denom: get("denom", "86 Diamonds"),
+      uid: get("uid", "—"),
+      pay: p,
+      base: b,
+      fee: f,
+      disc: dc,
+      total: t,
+      email,
+    });
   }, []);
 
   useEffect(() => {
@@ -111,14 +124,7 @@ export default function PaymentPage() {
 
   const confirmPaid = () => {
     setPaidStatus(true);
-    try {
-      const all = JSON.parse(localStorage.getItem("noryxaOrders") || "[]");
-      const i = all.findIndex((o: { inv: string }) => o.inv === inv);
-      if (i >= 0) {
-        all[i].status = "Sedang diverifikasi";
-        localStorage.setItem("noryxaOrders", JSON.stringify(all.slice(0, 30)));
-      }
-    } catch {}
+    updateOrderStatus(inv, "Sedang diverifikasi");
     window.open("https://wa.me/6281234567890?text=" + waMsg, "_blank");
   };
 
