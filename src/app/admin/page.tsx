@@ -32,14 +32,12 @@ interface ProductRow {
 }
 
 const ADMIN_PASS = "noryxa-admin-2026";
-const CATEGORIES = [
-  "Mobile Games",
-  "PC Games",
-  "Voucher",
-  "PPOB",
-  "Entertainment",
-  "Top Up Cepat",
-];
+const CATEGORIES = ["Mobile Games", "PC Games", "Voucher", "PPOB", "Entertainment", "Top Up Cepat"];
+
+const shell = "card overflow-hidden";
+const panelHead = "bg-[#f7f7f7] px-5 py-3 border-b-2 border-[#eee] flex items-center justify-between gap-3 flex-wrap";
+const panelTitle = "text-sm font-bold flex items-center gap-2";
+const iconBox = "w-10 h-10 rounded-xl bg-[#f7f7f7] grid place-items-center shrink-0";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
@@ -53,7 +51,16 @@ export default function AdminPage() {
   const [promos, setPromos] = useState<Promo[]>([]);
   const [stats, setStats] = useState({ total: 0, pending: 0, done: 0, revenue: 0 });
   const [msg, setMsg] = useState("");
+  const [saving, setSaving] = useState("");
 
+  // edit states
+  const [editOrder, setEditOrder] = useState<OrderRow | null>(null);
+  const [editProduct, setEditProduct] = useState<ProductRow | null>(null);
+  const [editDenom, setEditDenom] = useState<Denom | null>(null);
+  const [editPay, setEditPay] = useState<Pay | null>(null);
+  const [editPromo, setEditPromo] = useState<Promo | null>(null);
+
+  // add states
   const [np, setNp] = useState({ name: "", category: "Mobile Games", price: 0, img: "/images/3ba2d47c-f372-4e33-bbd8-712410f0f909.png", rank: 99, tags: "" });
   const [nd, setNd] = useState({ product_name: "Mobile Legends", label: "", price: 0, rank: 99 });
   const [npay, setNpay] = useState({ label: "", kind: "E-wallet", fee: 0, rank: 99 });
@@ -61,7 +68,7 @@ export default function AdminPage() {
 
   const flash = (t: string) => {
     setMsg(t);
-    setTimeout(() => setMsg(""), 2000);
+    setTimeout(() => setMsg(""), 2500);
   };
 
   const loadAll = useCallback(async () => {
@@ -74,7 +81,6 @@ export default function AdminPage() {
       done: (o.data || []).filter((x: OrderRow) => x.status === "Selesai").length,
       revenue: rev,
     });
-
     const p = await supabase.from("products").select("*").order("rank");
     setProducts(p.data || []);
     const d = await supabase.from("denoms").select("*").order("rank");
@@ -88,6 +94,18 @@ export default function AdminPage() {
   useEffect(() => {
     if (authed) loadAll();
   }, [authed, loadAll]);
+
+  const guard = async (id: string, fn: () => PromiseLike<unknown>, okMsg: string) => {
+    setSaving(id);
+    try {
+      await fn();
+      flash(okMsg);
+      await loadAll();
+    } catch {
+      flash("Gagal menyimpan");
+    }
+    setSaving("");
+  };
 
   if (!authed) {
     return (
@@ -104,7 +122,7 @@ export default function AdminPage() {
             onKeyDown={(e) => e.key === "Enter" && pass === ADMIN_PASS && setAuthed(true)}
           />
           <button
-            onClick={() => pass === ADMIN_PASS ? setAuthed(true) : flash("Password salah")}
+            onClick={() => (pass === ADMIN_PASS ? setAuthed(true) : flash("Password salah"))}
             className="w-full bg-[#ff385c] hover:bg-[#e12b4d] transition text-white text-sm font-semibold rounded-full py-3"
           >
             Masuk
@@ -115,12 +133,12 @@ export default function AdminPage() {
     );
   }
 
-  const TABS: { id: Tab; label: string }[] = [
-    { id: "orders", label: "Orders" },
-    { id: "products", label: "Produk" },
-    { id: "denoms", label: "Nominal" },
-    { id: "pays", label: "Pembayaran" },
-    { id: "promos", label: "Promo" },
+  const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
+    { id: "orders", label: "Orders", icon: <><path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2Z"></path><path d="M9 7h6M9 11h6M9 15h4"></path></> },
+    { id: "products", label: "Produk", icon: <><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8Z"></path><path d="m3.3 7 8.7 5 8.7-5M12 22V12"></path></> },
+    { id: "denoms", label: "Nominal", icon: <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path> },
+    { id: "pays", label: "Pembayaran", icon: <><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="M2 10h20"></path></> },
+    { id: "promos", label: "Promo", icon: <><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"></path><path d="M14 6v12"></path></> },
   ];
 
   const th = "text-left text-[11px] font-bold text-[#9a9a9a] uppercase tracking-wider px-3 py-2";
@@ -128,54 +146,87 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-[#f7f7f7]">
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b-2 border-[#eee]">
-        <div className="max-w-6xl mx-auto flex items-center gap-3 px-4 sm:px-6 h-16">
-          <h1 className="display text-lg font-bold">Admin — Noryxa Digital</h1>
-          <span className="ml-auto text-xs text-[#717171]">{stats.total} order</span>
-          <button onClick={() => setAuthed(false)} className="text-xs font-semibold text-[#ff385c] hover:underline">
-            Keluar
+      {/* HEADER (wireframe style: avatar + user + logout) */}
+      <header className="sticky top-0 z-30 bg-white border-b-2 border-[#eee]">
+        <div className="max-w-[1180px] mx-auto h-16 flex items-center gap-3 px-4 sm:px-6">
+          <div className="w-9 h-9 rounded-full bg-[#111318] grid place-items-center shrink-0">
+            <svg className="ico w-4 h-4 text-white" viewBox="0 0 24 24">
+              <circle cx="12" cy="8" r="4"></circle>
+              <path d="M4 21a8 8 0 0 1 16 0"></path>
+            </svg>
+          </div>
+          <div className="min-w-0">
+            <p className="font-bold text-sm leading-tight truncate">Admin Noryxa</p>
+            <p className="text-[11px] text-[#717171] truncate">Kelola store & order</p>
+          </div>
+          <button
+            onClick={() => setAuthed(false)}
+            className="ml-auto text-sm font-bold text-[#ff385c] hover:bg-[#fff5f7] px-3 py-1.5 rounded-lg transition"
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <svg className="ico w-4 h-4" viewBox="0 0 24 24">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                <path d="M10 17l5-5-5-5M15 12H3"></path>
+              </svg>
+              <span className="hidden sm:inline">Keluar</span>
+            </span>
           </button>
         </div>
-      </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 pb-16">
-        {/* STATS */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-          {[
-            { label: "Total Order", value: String(stats.total) },
-            { label: "Menunggu Bayar", value: String(stats.pending) },
-            { label: "Selesai", value: String(stats.done) },
-            { label: "Revenue (Selesai)", value: rupiah(stats.revenue) },
-          ].map((s) => (
-            <div key={s.label} className="card p-4">
-              <p className="text-[11px] text-[#717171] uppercase tracking-wider font-bold">{s.label}</p>
-              <p className="display text-xl font-bold mt-1">{s.value}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* TABS */}
-        <div className="scroll-x flex gap-2 mb-4">
+        {/* SECTION TABS (wireframe style: horizontal, border-b aktif) */}
+        <div className="max-w-[1180px] mx-auto px-4 sm:px-6 border-t border-[#eee] flex gap-1 overflow-x-auto">
           {TABS.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold border-2 transition ${
-                tab === t.id ? "bg-[#111318] text-white border-[#111318]" : "border-[#eee] text-[#717171] hover:border-[#111]"
+              className={`whitespace-nowrap px-4 py-2.5 text-sm flex items-center gap-2 border-b-2 transition ${
+                tab === t.id
+                  ? "font-bold text-[#ff385c] border-[#111318]"
+                  : "font-medium text-[#717171] border-transparent hover:text-[#ff385c]"
               }`}
             >
+              <svg className="ico w-4 h-4" viewBox="0 0 24 24">{t.icon}</svg>
               {t.label}
             </button>
           ))}
         </div>
+      </header>
 
-        {msg && <p className="text-sm text-[#0a7d43] font-semibold mb-3">{msg}</p>}
+      <main className="max-w-[1180px] mx-auto px-4 sm:px-6 py-6 pb-16">
+        {/* OVERVIEW STATS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {[
+            { icon: <><path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2Z"></path><path d="M9 7h6M9 11h6M9 15h4"></path></>, label: "Total Order", value: String(stats.total) },
+            { icon: <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>, label: "Menunggu Bayar", value: String(stats.pending) },
+            { icon: <path d="M20 6 9 17l-5-5"></path>, label: "Selesai", value: String(stats.done) },
+            { icon: <><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"></path><path d="M14 6v12"></path></>, label: "Revenue (Selesai)", value: rupiah(stats.revenue) },
+          ].map((s) => (
+            <div key={s.label} className="card p-5">
+              <div className={iconBox + " mb-3"}>
+                <svg className="ico w-5 h-5 text-[#ff385c]" viewBox="0 0 24 24">{s.icon}</svg>
+              </div>
+              <p className="display text-2xl font-black">{s.value}</p>
+              <p className="text-xs text-[#717171] mt-1">{s.label}</p>
+            </div>
+          ))}
+        </div>
 
-        {/* ORDERS */}
+        {msg && (
+          <p className="text-sm text-[#0a7d43] font-semibold mb-4 bg-[#e8f7ef] rounded-xl px-4 py-2.5">{msg}</p>
+        )}
+
+        {/* ============ ORDERS ============ */}
         {tab === "orders" && (
-          <section className="card overflow-hidden">
+          <section className={shell}>
+            <div className={panelHead}>
+              <h2 className={panelTitle}>
+                <svg className="ico w-4 h-4 text-[#ff385c]" viewBox="0 0 24 24"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2Z"></path><path d="M9 7h6M9 11h6M9 15h4"></path></svg>
+                SEMUA ORDER
+              </h2>
+              <span className="text-xs text-[#717171]">{orders.length} order</span>
+            </div>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px]">
+              <table className="w-full min-w-[760px]">
                 <thead className="border-b-2 border-[#eee] bg-[#fafafa]">
                   <tr>
                     <th className={th}>Invoice</th>
@@ -188,48 +239,89 @@ export default function AdminPage() {
                 </thead>
                 <tbody className="divide-y-2 divide-[#f2f2f2]">
                   {orders.map((o) => (
-                    <tr key={o.id}>
+                    <tr key={o.id} className="hover:bg-[#fafafa] transition">
                       <td className={td + " mono font-semibold"}>{o.inv}</td>
                       <td className={td}>
-                        <p className="font-semibold">{o.product}</p>
-                        <p className="text-xs text-[#717171]">{o.denom}</p>
-                      </td>
-                      <td className={td + " mono text-xs"}>{o.uid}</td>
-                      <td className={td + " font-semibold"}>{rupiah(o.total)}</td>
-                      <td className={td}>
-                        <span className={`text-[11px] font-bold rounded-full px-2 py-1 ${
-                          o.status === "Selesai" ? "bg-[#e8f7ef] text-[#0a7d43]"
-                          : o.status === "Sedang diverifikasi" ? "bg-[#eef2ff] text-[#3730a3]"
-                          : "bg-[#fff5e8] text-[#a05a00]"
-                        }`}>
-                          {o.status}
-                        </span>
+                        {editOrder?.id === o.id ? (
+                          <div className="flex flex-col gap-1.5 min-w-[180px]">
+                            <input className="field !py-1.5 !px-2.5 text-xs" value={editOrder.product} onChange={(e) => setEditOrder({ ...editOrder, product: e.target.value })} />
+                            <input className="field !py-1.5 !px-2.5 text-xs" value={editOrder.denom} onChange={(e) => setEditOrder({ ...editOrder, denom: e.target.value })} />
+                          </div>
+                        ) : (
+                          <>
+                            <p className="font-semibold">{o.product}</p>
+                            <p className="text-xs text-[#717171]">{o.denom}</p>
+                          </>
+                        )}
                       </td>
                       <td className={td}>
-                        <div className="flex gap-1.5">
-                          {o.status !== "Selesai" && (
+                        {editOrder?.id === o.id ? (
+                          <input className="field !py-1.5 !px-2.5 text-xs mono w-24" value={editOrder.uid} onChange={(e) => setEditOrder({ ...editOrder, uid: e.target.value })} />
+                        ) : (
+                          <span className="mono text-xs">{o.uid}</span>
+                        )}
+                      </td>
+                      <td className={td}>
+                        {editOrder?.id === o.id ? (
+                          <input type="number" className="field !py-1.5 !px-2.5 text-xs w-24" value={editOrder.total} onChange={(e) => setEditOrder({ ...editOrder, total: Number(e.target.value) })} />
+                        ) : (
+                          <span className="font-semibold">{rupiah(o.total)}</span>
+                        )}
+                      </td>
+                      <td className={td}>
+                        {editOrder?.id === o.id ? (
+                          <select className="field !py-1.5 !px-2.5 text-xs" value={editOrder.status} onChange={(e) => setEditOrder({ ...editOrder, status: e.target.value })}>
+                            <option>Menunggu pembayaran</option>
+                            <option>Sedang diverifikasi</option>
+                            <option>Selesai</option>
+                          </select>
+                        ) : (
+                          <span className={`text-[11px] font-bold rounded-full px-2 py-1 ${
+                            o.status === "Selesai" ? "bg-[#e8f7ef] text-[#0a7d43]"
+                            : o.status === "Sedang diverifikasi" ? "bg-[#eef2ff] text-[#3730a3]"
+                            : "bg-[#fff5e8] text-[#a05a00]"
+                          }`}>
+                            {o.status}
+                          </span>
+                        )}
+                      </td>
+                      <td className={td}>
+                        {editOrder?.id === o.id ? (
+                          <div className="flex gap-1.5">
                             <button
-                              onClick={async () => {
-                                await supabase.from("orders").update({ status: "Selesai" }).eq("id", o.id);
-                                flash("Order diselesaikan");
-                                loadAll();
-                              }}
-                              className="text-xs font-semibold text-[#0a7d43] hover:underline"
+                              disabled={saving === o.id}
+                              onClick={() => guard(o.id, async () => {
+                                const { id, inv, product, denom, uid, pay, total, status } = editOrder;
+                                await supabase.from("orders").update({ inv, product, denom, uid, pay, total, status }).eq("id", id);
+                                setEditOrder(null);
+                              }, "Order diperbarui")}
+                              className="text-xs font-bold text-white bg-[#ff385c] hover:bg-[#e12b4d] rounded-full px-3 py-1.5 transition"
                             >
-                              Selesaikan
+                              Simpan
                             </button>
-                          )}
-                          <button
-                            onClick={async () => {
-                              await supabase.from("orders").delete().eq("id", o.id);
-                              flash("Order dihapus");
-                              loadAll();
-                            }}
-                            className="text-xs font-semibold text-[#ff385c] hover:underline"
-                          >
-                            Hapus
-                          </button>
-                        </div>
+                            <button onClick={() => setEditOrder(null)} className="text-xs font-semibold text-[#717171] hover:text-[#111] px-2">
+                              Batal
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex gap-2 text-xs font-semibold">
+                            <button onClick={() => setEditOrder(o)} className="text-[#3730a3] hover:underline">Edit</button>
+                            {o.status !== "Selesai" && (
+                              <button
+                                onClick={() => guard(o.id, () => supabase.from("orders").update({ status: "Selesai" }).eq("id", o.id), "Order diselesaikan")}
+                                className="text-[#0a7d43] hover:underline"
+                              >
+                                Selesaikan
+                              </button>
+                            )}
+                            <button
+                              onClick={() => guard(o.id, () => supabase.from("orders").delete().eq("id", o.id), "Order dihapus")}
+                              className="text-[#ff385c] hover:underline"
+                            >
+                              Hapus
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -242,88 +334,158 @@ export default function AdminPage() {
           </section>
         )}
 
-        {/* PRODUCTS */}
+        {/* ============ PRODUK ============ */}
         {tab === "products" && (
           <>
-            <section className="card p-4 mb-4">
-              <p className="eyebrow mb-3">Tambah Produk</p>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                <input className="field" placeholder="Nama produk" value={np.name} onChange={(e) => setNp({ ...np, name: e.target.value })} />
-                <select className="field" value={np.category} onChange={(e) => setNp({ ...np, category: e.target.value })}>
-                  {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-                </select>
-                <input className="field" type="number" placeholder="Harga mulai" value={np.price || ""} onChange={(e) => setNp({ ...np, price: Number(e.target.value) })} />
-                <input className="field" placeholder="Path gambar (/images/...)" value={np.img} onChange={(e) => setNp({ ...np, img: e.target.value })} />
-                <input className="field" type="number" placeholder="Rank" value={np.rank} onChange={(e) => setNp({ ...np, rank: Number(e.target.value) })} />
-                <input className="field" placeholder="Tags (promo,instant,popular)" value={np.tags} onChange={(e) => setNp({ ...np, tags: e.target.value })} />
+            <section className={shell + " mb-4"}>
+              <div className={panelHead}>
+                <h2 className={panelTitle}>
+                  <svg className="ico w-4 h-4 text-[#ff385c]" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+                  TAMBAH PRODUK
+                </h2>
               </div>
-              <button
-                onClick={async () => {
-                  if (!np.name) return;
-                  const tags = np.tags.split(",").map((t) => t.trim()).filter(Boolean);
-                  await supabase.from("products").insert({ ...np, tags });
-                  setNp({ name: "", category: "Mobile Games", price: 0, img: "/images/3ba2d47c-f372-4e33-bbd8-712410f0f909.png", rank: 99, tags: "" });
-                  flash("Produk ditambahkan");
-                  loadAll();
-                }}
-                className="mt-3 bg-[#ff385c] hover:bg-[#e12b4d] transition text-white text-sm font-semibold rounded-full px-6 py-2.5"
-              >
-                Tambah
-              </button>
+              <div className="p-5">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                  <input className="field" placeholder="Nama produk" value={np.name} onChange={(e) => setNp({ ...np, name: e.target.value })} />
+                  <select className="field" value={np.category} onChange={(e) => setNp({ ...np, category: e.target.value })}>
+                    {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+                  </select>
+                  <input className="field" type="number" placeholder="Harga mulai" value={np.price || ""} onChange={(e) => setNp({ ...np, price: Number(e.target.value) })} />
+                  <input className="field" placeholder="Path gambar (/images/...)" value={np.img} onChange={(e) => setNp({ ...np, img: e.target.value })} />
+                  <input className="field" type="number" placeholder="Rank" value={np.rank} onChange={(e) => setNp({ ...np, rank: Number(e.target.value) })} />
+                  <input className="field" placeholder="Tags (promo,instant,popular)" value={np.tags} onChange={(e) => setNp({ ...np, tags: e.target.value })} />
+                </div>
+                <button
+                  onClick={() => guard("add-product", async () => {
+                    if (!np.name) throw new Error("nama kosong");
+                    const tags = np.tags.split(",").map((t) => t.trim()).filter(Boolean);
+                    await supabase.from("products").insert({ ...np, tags });
+                    setNp({ name: "", category: "Mobile Games", price: 0, img: "/images/3ba2d47c-f372-4e33-bbd8-712410f0f909.png", rank: 99, tags: "" });
+                  }, "Produk ditambahkan")}
+                  className="mt-3 bg-[#ff385c] hover:bg-[#e12b4d] transition text-white text-sm font-semibold rounded-full px-6 py-2.5"
+                >
+                  Tambah Produk
+                </button>
+              </div>
             </section>
 
-            <section className="card overflow-hidden">
+            <section className={shell}>
+              <div className={panelHead}>
+                <h2 className={panelTitle}>
+                  <svg className="ico w-4 h-4 text-[#ff385c]" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8Z"></path></svg>
+                  SEMUA PRODUK ({products.length})
+                </h2>
+              </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[680px]">
+                <table className="w-full min-w-[760px]">
                   <thead className="border-b-2 border-[#eee] bg-[#fafafa]">
                     <tr>
                       <th className={th}>Produk</th>
                       <th className={th}>Kategori</th>
                       <th className={th}>Harga</th>
                       <th className={th}>Rank</th>
+                      <th className={th}>Tags</th>
                       <th className={th}>Status</th>
                       <th className={th}>Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y-2 divide-[#f2f2f2]">
                     {products.map((p) => (
-                      <tr key={p.id}>
+                      <tr key={p.id} className="hover:bg-[#fafafa] transition">
                         <td className={td}>
-                          <div className="flex items-center gap-2">
-                            <img src={p.img} alt="" className="w-8 h-8 rounded-lg object-cover" />
-                            <span className="font-semibold">{p.name}</span>
-                          </div>
+                          {editProduct?.id === p.id ? (
+                            <div className="flex items-center gap-2">
+                              <img src={editProduct.img} alt="" className="w-8 h-8 rounded-lg object-cover" />
+                              <div className="flex flex-col gap-1.5 min-w-[160px]">
+                                <input className="field !py-1.5 !px-2.5 text-xs" value={editProduct.name} onChange={(e) => setEditProduct({ ...editProduct, name: e.target.value })} />
+                                <input className="field !py-1.5 !px-2.5 text-xs" placeholder="/images/..." value={editProduct.img} onChange={(e) => setEditProduct({ ...editProduct, img: e.target.value })} />
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <img src={p.img} alt="" className="w-8 h-8 rounded-lg object-cover" />
+                              <span className="font-semibold">{p.name}</span>
+                            </div>
+                          )}
                         </td>
-                        <td className={td + " text-xs"}>{p.category}</td>
-                        <td className={td + " font-semibold"}>{rupiah(p.price)}</td>
-                        <td className={td}>{p.rank}</td>
                         <td className={td}>
-                          <span className={`text-[11px] font-bold rounded-full px-2 py-1 ${p.active ? "bg-[#e8f7ef] text-[#0a7d43]" : "bg-[#f0f0f0] text-[#717171]"}`}>
-                            {p.active ? "Aktif" : "Nonaktif"}
-                          </span>
+                          {editProduct?.id === p.id ? (
+                            <select className="field !py-1.5 !px-2.5 text-xs" value={editProduct.category} onChange={(e) => setEditProduct({ ...editProduct, category: e.target.value })}>
+                              {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+                            </select>
+                          ) : (
+                            <span className="text-xs">{p.category}</span>
+                          )}
                         </td>
                         <td className={td}>
-                          <div className="flex gap-2 text-xs font-semibold">
-                            <button
-                              onClick={async () => {
-                                await supabase.from("products").update({ active: !p.active }).eq("id", p.id);
-                                loadAll();
-                              }}
-                              className={p.active ? "text-[#a05a00] hover:underline" : "text-[#0a7d43] hover:underline"}
-                            >
-                              {p.active ? "Nonaktifkan" : "Aktifkan"}
-                            </button>
-                            <button
-                              onClick={async () => {
-                                await supabase.from("products").delete().eq("id", p.id);
-                                flash("Produk dihapus");
-                                loadAll();
-                              }}
-                              className="text-[#ff385c] hover:underline"
-                            >
-                              Hapus
-                            </button>
-                          </div>
+                          {editProduct?.id === p.id ? (
+                            <input type="number" className="field !py-1.5 !px-2.5 text-xs w-24" value={editProduct.price} onChange={(e) => setEditProduct({ ...editProduct, price: Number(e.target.value) })} />
+                          ) : (
+                            <span className="font-semibold">{rupiah(p.price)}</span>
+                          )}
+                        </td>
+                        <td className={td}>
+                          {editProduct?.id === p.id ? (
+                            <input type="number" className="field !py-1.5 !px-2.5 text-xs w-16" value={editProduct.rank} onChange={(e) => setEditProduct({ ...editProduct, rank: Number(e.target.value) })} />
+                          ) : (
+                            p.rank
+                          )}
+                        </td>
+                        <td className={td}>
+                          {editProduct?.id === p.id ? (
+                            <input className="field !py-1.5 !px-2.5 text-xs w-28" placeholder="promo,instant" value={editProduct.tags.join(",")} onChange={(e) => setEditProduct({ ...editProduct, tags: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) })} />
+                          ) : (
+                            <div className="flex flex-wrap gap-1">
+                              {p.tags?.map((t) => (
+                                <span key={t} className="text-[10px] font-bold bg-[#f0f0f0] rounded-full px-2 py-0.5">{t}</span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                        <td className={td}>
+                          {editProduct?.id === p.id ? (
+                            <label className="flex items-center gap-1.5 text-xs font-semibold cursor-pointer">
+                              <input type="checkbox" className="accent-[#ff385c] w-4 h-4" checked={editProduct.active} onChange={(e) => setEditProduct({ ...editProduct, active: e.target.checked })} />
+                              Aktif
+                            </label>
+                          ) : (
+                            <span className={`text-[11px] font-bold rounded-full px-2 py-1 ${p.active ? "bg-[#e8f7ef] text-[#0a7d43]" : "bg-[#f0f0f0] text-[#717171]"}`}>
+                              {p.active ? "Aktif" : "Nonaktif"}
+                            </span>
+                          )}
+                        </td>
+                        <td className={td}>
+                          {editProduct?.id === p.id ? (
+                            <div className="flex gap-1.5">
+                              <button
+                                disabled={saving === p.id}
+                                onClick={() => guard(p.id, async () => {
+                                  await supabase.from("products").update(editProduct).eq("id", p.id);
+                                  setEditProduct(null);
+                                }, "Produk diperbarui")}
+                                className="text-xs font-bold text-white bg-[#ff385c] hover:bg-[#e12b4d] rounded-full px-3 py-1.5 transition"
+                              >
+                                Simpan
+                              </button>
+                              <button onClick={() => setEditProduct(null)} className="text-xs font-semibold text-[#717171] hover:text-[#111] px-2">Batal</button>
+                            </div>
+                          ) : (
+                            <div className="flex gap-2 text-xs font-semibold">
+                              <button onClick={() => setEditProduct(p)} className="text-[#3730a3] hover:underline">Edit</button>
+                              <button
+                                onClick={() => guard(p.id, () => supabase.from("products").update({ active: !p.active }).eq("id", p.id), p.active ? "Produk dinonaktifkan" : "Produk diaktifkan")}
+                                className={p.active ? "text-[#a05a00] hover:underline" : "text-[#0a7d43] hover:underline"}
+                              >
+                                {p.active ? "Nonaktif" : "Aktifkan"}
+                              </button>
+                              <button
+                                onClick={() => guard(p.id, () => supabase.from("products").delete().eq("id", p.id), "Produk dihapus")}
+                                className="text-[#ff385c] hover:underline"
+                              >
+                                Hapus
+                              </button>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -334,34 +496,45 @@ export default function AdminPage() {
           </>
         )}
 
-        {/* DENOMS */}
+        {/* ============ NOMINAL ============ */}
         {tab === "denoms" && (
           <>
-            <section className="card p-4 mb-4">
-              <p className="eyebrow mb-3">Tambah Nominal</p>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-                <input className="field" placeholder="Nama produk (harus sama)" value={nd.product_name} onChange={(e) => setNd({ ...nd, product_name: e.target.value })} />
-                <input className="field" placeholder="Label (mis. 86 Diamonds)" value={nd.label} onChange={(e) => setNd({ ...nd, label: e.target.value })} />
-                <input className="field" type="number" placeholder="Harga" value={nd.price || ""} onChange={(e) => setNd({ ...nd, price: Number(e.target.value) })} />
-                <input className="field" type="number" placeholder="Rank" value={nd.rank} onChange={(e) => setNd({ ...nd, rank: Number(e.target.value) })} />
+            <section className={shell + " mb-4"}>
+              <div className={panelHead}>
+                <h2 className={panelTitle}>
+                  <svg className="ico w-4 h-4 text-[#ff385c]" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+                  TAMBAH NOMINAL
+                </h2>
               </div>
-              <button
-                onClick={async () => {
-                  if (!nd.label || !nd.product_name) return;
-                  await supabase.from("denoms").insert(nd);
-                  setNd({ product_name: nd.product_name, label: "", price: 0, rank: 99 });
-                  flash("Nominal ditambahkan");
-                  loadAll();
-                }}
-                className="mt-3 bg-[#ff385c] hover:bg-[#e12b4d] transition text-white text-sm font-semibold rounded-full px-6 py-2.5"
-              >
-                Tambah
-              </button>
+              <div className="p-5">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                  <input className="field" placeholder="Nama produk (key)" value={nd.product_name} onChange={(e) => setNd({ ...nd, product_name: e.target.value })} />
+                  <input className="field" placeholder="Label (mis. 86 Diamonds)" value={nd.label} onChange={(e) => setNd({ ...nd, label: e.target.value })} />
+                  <input className="field" type="number" placeholder="Harga" value={nd.price || ""} onChange={(e) => setNd({ ...nd, price: Number(e.target.value) })} />
+                  <input className="field" type="number" placeholder="Rank" value={nd.rank} onChange={(e) => setNd({ ...nd, rank: Number(e.target.value) })} />
+                </div>
+                <button
+                  onClick={() => guard("add-denom", async () => {
+                    if (!nd.label || !nd.product_name) throw new Error("kosong");
+                    await supabase.from("denoms").insert(nd);
+                    setNd({ product_name: nd.product_name, label: "", price: 0, rank: 99 });
+                  }, "Nominal ditambahkan")}
+                  className="mt-3 bg-[#ff385c] hover:bg-[#e12b4d] transition text-white text-sm font-semibold rounded-full px-6 py-2.5"
+                >
+                  Tambah Nominal
+                </button>
+              </div>
             </section>
 
-            <section className="card overflow-hidden">
+            <section className={shell}>
+              <div className={panelHead}>
+                <h2 className={panelTitle}>
+                  <svg className="ico w-4 h-4 text-[#ff385c]" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                  SEMUA NOMINAL ({denoms.length})
+                </h2>
+              </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[560px]">
+                <table className="w-full min-w-[640px]">
                   <thead className="border-b-2 border-[#eee] bg-[#fafafa]">
                     <tr>
                       <th className={th}>Produk</th>
@@ -373,22 +546,61 @@ export default function AdminPage() {
                   </thead>
                   <tbody className="divide-y-2 divide-[#f2f2f2]">
                     {denoms.map((d) => (
-                      <tr key={d.id}>
-                        <td className={td + " text-xs"}>{d.product_name}</td>
-                        <td className={td + " font-semibold"}>{d.label}</td>
-                        <td className={td}>{rupiah(d.price)}</td>
-                        <td className={td}>{d.rank}</td>
+                      <tr key={d.id} className="hover:bg-[#fafafa] transition">
                         <td className={td}>
-                          <button
-                            onClick={async () => {
-                              await supabase.from("denoms").delete().eq("id", d.id);
-                              flash("Nominal dihapus");
-                              loadAll();
-                            }}
-                            className="text-xs font-semibold text-[#ff385c] hover:underline"
-                          >
-                            Hapus
-                          </button>
+                          {editDenom?.id === d.id ? (
+                            <input className="field !py-1.5 !px-2.5 text-xs w-32" value={editDenom.product_name} onChange={(e) => setEditDenom({ ...editDenom, product_name: e.target.value })} />
+                          ) : (
+                            <span className="text-xs">{d.product_name}</span>
+                          )}
+                        </td>
+                        <td className={td}>
+                          {editDenom?.id === d.id ? (
+                            <input className="field !py-1.5 !px-2.5 text-xs w-36" value={editDenom.label} onChange={(e) => setEditDenom({ ...editDenom, label: e.target.value })} />
+                          ) : (
+                            <span className="font-semibold">{d.label}</span>
+                          )}
+                        </td>
+                        <td className={td}>
+                          {editDenom?.id === d.id ? (
+                            <input type="number" className="field !py-1.5 !px-2.5 text-xs w-24" value={editDenom.price} onChange={(e) => setEditDenom({ ...editDenom, price: Number(e.target.value) })} />
+                          ) : (
+                            rupiah(d.price)
+                          )}
+                        </td>
+                        <td className={td}>
+                          {editDenom?.id === d.id ? (
+                            <input type="number" className="field !py-1.5 !px-2.5 text-xs w-16" value={editDenom.rank} onChange={(e) => setEditDenom({ ...editDenom, rank: Number(e.target.value) })} />
+                          ) : (
+                            d.rank
+                          )}
+                        </td>
+                        <td className={td}>
+                          {editDenom?.id === d.id ? (
+                            <div className="flex gap-1.5">
+                              <button
+                                disabled={saving === d.id}
+                                onClick={() => guard(d.id, async () => {
+                                  await supabase.from("denoms").update(editDenom).eq("id", d.id);
+                                  setEditDenom(null);
+                                }, "Nominal diperbarui")}
+                                className="text-xs font-bold text-white bg-[#ff385c] hover:bg-[#e12b4d] rounded-full px-3 py-1.5 transition"
+                              >
+                                Simpan
+                              </button>
+                              <button onClick={() => setEditDenom(null)} className="text-xs font-semibold text-[#717171] hover:text-[#111] px-2">Batal</button>
+                            </div>
+                          ) : (
+                            <div className="flex gap-2 text-xs font-semibold">
+                              <button onClick={() => setEditDenom(d)} className="text-[#3730a3] hover:underline">Edit</button>
+                              <button
+                                onClick={() => guard(d.id, () => supabase.from("denoms").delete().eq("id", d.id), "Nominal dihapus")}
+                                className="text-[#ff385c] hover:underline"
+                              >
+                                Hapus
+                              </button>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -399,34 +611,45 @@ export default function AdminPage() {
           </>
         )}
 
-        {/* PAYS */}
+        {/* ============ PEMBAYARAN ============ */}
         {tab === "pays" && (
           <>
-            <section className="card p-4 mb-4">
-              <p className="eyebrow mb-3">Tambah Metode</p>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-                <input className="field" placeholder="Label (mis. DANA)" value={npay.label} onChange={(e) => setNpay({ ...npay, label: e.target.value })} />
-                <input className="field" placeholder="Jenis (E-wallet, dll)" value={npay.kind} onChange={(e) => setNpay({ ...npay, kind: e.target.value })} />
-                <input className="field" type="number" placeholder="Biaya" value={npay.fee} onChange={(e) => setNpay({ ...npay, fee: Number(e.target.value) })} />
-                <input className="field" type="number" placeholder="Rank" value={npay.rank} onChange={(e) => setNpay({ ...npay, rank: Number(e.target.value) })} />
+            <section className={shell + " mb-4"}>
+              <div className={panelHead}>
+                <h2 className={panelTitle}>
+                  <svg className="ico w-4 h-4 text-[#ff385c]" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+                  TAMBAH METODE
+                </h2>
               </div>
-              <button
-                onClick={async () => {
-                  if (!npay.label) return;
-                  await supabase.from("pays").insert(npay);
-                  setNpay({ label: "", kind: "E-wallet", fee: 0, rank: 99 });
-                  flash("Metode ditambahkan");
-                  loadAll();
-                }}
-                className="mt-3 bg-[#ff385c] hover:bg-[#e12b4d] transition text-white text-sm font-semibold rounded-full px-6 py-2.5"
-              >
-                Tambah
-              </button>
+              <div className="p-5">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                  <input className="field" placeholder="Label (mis. DANA)" value={npay.label} onChange={(e) => setNpay({ ...npay, label: e.target.value })} />
+                  <input className="field" placeholder="Jenis (E-wallet, dll)" value={npay.kind} onChange={(e) => setNpay({ ...npay, kind: e.target.value })} />
+                  <input className="field" type="number" placeholder="Biaya" value={npay.fee} onChange={(e) => setNpay({ ...npay, fee: Number(e.target.value) })} />
+                  <input className="field" type="number" placeholder="Rank" value={npay.rank} onChange={(e) => setNpay({ ...npay, rank: Number(e.target.value) })} />
+                </div>
+                <button
+                  onClick={() => guard("add-pay", async () => {
+                    if (!npay.label) throw new Error("kosong");
+                    await supabase.from("pays").insert(npay);
+                    setNpay({ label: "", kind: "E-wallet", fee: 0, rank: 99 });
+                  }, "Metode ditambahkan")}
+                  className="mt-3 bg-[#ff385c] hover:bg-[#e12b4d] transition text-white text-sm font-semibold rounded-full px-6 py-2.5"
+                >
+                  Tambah Metode
+                </button>
+              </div>
             </section>
 
-            <section className="card overflow-hidden">
+            <section className={shell}>
+              <div className={panelHead}>
+                <h2 className={panelTitle}>
+                  <svg className="ico w-4 h-4 text-[#ff385c]" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="M2 10h20"></path></svg>
+                  SEMUA METODE ({pays.length})
+                </h2>
+              </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[520px]">
+                <table className="w-full min-w-[600px]">
                   <thead className="border-b-2 border-[#eee] bg-[#fafafa]">
                     <tr>
                       <th className={th}>Metode</th>
@@ -438,22 +661,61 @@ export default function AdminPage() {
                   </thead>
                   <tbody className="divide-y-2 divide-[#f2f2f2]">
                     {pays.map((y) => (
-                      <tr key={y.id}>
-                        <td className={td + " font-semibold"}>{y.label}</td>
-                        <td className={td + " text-xs"}>{y.kind}</td>
-                        <td className={td}>{y.fee ? rupiah(y.fee) : "Gratis"}</td>
-                        <td className={td}>{y.rank}</td>
+                      <tr key={y.id} className="hover:bg-[#fafafa] transition">
                         <td className={td}>
-                          <button
-                            onClick={async () => {
-                              await supabase.from("pays").delete().eq("id", y.id);
-                              flash("Metode dihapus");
-                              loadAll();
-                            }}
-                            className="text-xs font-semibold text-[#ff385c] hover:underline"
-                          >
-                            Hapus
-                          </button>
+                          {editPay?.id === y.id ? (
+                            <input className="field !py-1.5 !px-2.5 text-xs w-36" value={editPay.label} onChange={(e) => setEditPay({ ...editPay, label: e.target.value })} />
+                          ) : (
+                            <span className="font-semibold">{y.label}</span>
+                          )}
+                        </td>
+                        <td className={td}>
+                          {editPay?.id === y.id ? (
+                            <input className="field !py-1.5 !px-2.5 text-xs w-32" value={editPay.kind} onChange={(e) => setEditPay({ ...editPay, kind: e.target.value })} />
+                          ) : (
+                            <span className="text-xs">{y.kind}</span>
+                          )}
+                        </td>
+                        <td className={td}>
+                          {editPay?.id === y.id ? (
+                            <input type="number" className="field !py-1.5 !px-2.5 text-xs w-20" value={editPay.fee} onChange={(e) => setEditPay({ ...editPay, fee: Number(e.target.value) })} />
+                          ) : (
+                            y.fee ? rupiah(y.fee) : "Gratis"
+                          )}
+                        </td>
+                        <td className={td}>
+                          {editPay?.id === y.id ? (
+                            <input type="number" className="field !py-1.5 !px-2.5 text-xs w-16" value={editPay.rank} onChange={(e) => setEditPay({ ...editPay, rank: Number(e.target.value) })} />
+                          ) : (
+                            y.rank
+                          )}
+                        </td>
+                        <td className={td}>
+                          {editPay?.id === y.id ? (
+                            <div className="flex gap-1.5">
+                              <button
+                                disabled={saving === y.id}
+                                onClick={() => guard(y.id, async () => {
+                                  await supabase.from("pays").update(editPay).eq("id", y.id);
+                                  setEditPay(null);
+                                }, "Metode diperbarui")}
+                                className="text-xs font-bold text-white bg-[#ff385c] hover:bg-[#e12b4d] rounded-full px-3 py-1.5 transition"
+                              >
+                                Simpan
+                              </button>
+                              <button onClick={() => setEditPay(null)} className="text-xs font-semibold text-[#717171] hover:text-[#111] px-2">Batal</button>
+                            </div>
+                          ) : (
+                            <div className="flex gap-2 text-xs font-semibold">
+                              <button onClick={() => setEditPay(y)} className="text-[#3730a3] hover:underline">Edit</button>
+                              <button
+                                onClick={() => guard(y.id, () => supabase.from("pays").delete().eq("id", y.id), "Metode dihapus")}
+                                className="text-[#ff385c] hover:underline"
+                              >
+                                Hapus
+                              </button>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -464,32 +726,43 @@ export default function AdminPage() {
           </>
         )}
 
-        {/* PROMOS */}
+        {/* ============ PROMO ============ */}
         {tab === "promos" && (
           <>
-            <section className="card p-4 mb-4">
-              <p className="eyebrow mb-3">Tambah Promo</p>
-              <div className="grid sm:grid-cols-2 gap-2.5">
-                <input className="field mono uppercase" placeholder="Kode (mis. NORYXA10)" value={npr.code} onChange={(e) => setNpr({ ...npr, code: e.target.value.toUpperCase() })} />
-                <input className="field" type="number" placeholder="Diskon %" value={npr.disc_pct} onChange={(e) => setNpr({ ...npr, disc_pct: Number(e.target.value) })} />
+            <section className={shell + " mb-4"}>
+              <div className={panelHead}>
+                <h2 className={panelTitle}>
+                  <svg className="ico w-4 h-4 text-[#ff385c]" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+                  TAMBAH PROMO
+                </h2>
               </div>
-              <button
-                onClick={async () => {
-                  if (!npr.code) return;
-                  await supabase.from("promos").insert(npr);
-                  setNpr({ code: "", disc_pct: 10 });
-                  flash("Promo ditambahkan");
-                  loadAll();
-                }}
-                className="mt-3 bg-[#ff385c] hover:bg-[#e12b4d] transition text-white text-sm font-semibold rounded-full px-6 py-2.5"
-              >
-                Tambah
-              </button>
+              <div className="p-5">
+                <div className="grid sm:grid-cols-2 gap-2.5 max-w-md">
+                  <input className="field mono uppercase" placeholder="Kode (mis. NORYXA10)" value={npr.code} onChange={(e) => setNpr({ ...npr, code: e.target.value.toUpperCase() })} />
+                  <input className="field" type="number" placeholder="Diskon %" value={npr.disc_pct} onChange={(e) => setNpr({ ...npr, disc_pct: Number(e.target.value) })} />
+                </div>
+                <button
+                  onClick={() => guard("add-promo", async () => {
+                    if (!npr.code) throw new Error("kosong");
+                    await supabase.from("promos").insert(npr);
+                    setNpr({ code: "", disc_pct: 10 });
+                  }, "Promo ditambahkan")}
+                  className="mt-3 bg-[#ff385c] hover:bg-[#e12b4d] transition text-white text-sm font-semibold rounded-full px-6 py-2.5"
+                >
+                  Tambah Promo
+                </button>
+              </div>
             </section>
 
-            <section className="card overflow-hidden">
+            <section className={shell}>
+              <div className={panelHead}>
+                <h2 className={panelTitle}>
+                  <svg className="ico w-4 h-4 text-[#ff385c]" viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"></path></svg>
+                  SEMUA PROMO ({promos.length})
+                </h2>
+              </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[420px]">
+                <table className="w-full min-w-[520px]">
                   <thead className="border-b-2 border-[#eee] bg-[#fafafa]">
                     <tr>
                       <th className={th}>Kode</th>
@@ -500,36 +773,65 @@ export default function AdminPage() {
                   </thead>
                   <tbody className="divide-y-2 divide-[#f2f2f2]">
                     {promos.map((m) => (
-                      <tr key={m.id}>
-                        <td className={td + " mono font-bold"}>{m.code}</td>
-                        <td className={td}>{m.disc_pct}%</td>
+                      <tr key={m.id} className="hover:bg-[#fafafa] transition">
                         <td className={td}>
-                          <span className={`text-[11px] font-bold rounded-full px-2 py-1 ${m.active ? "bg-[#e8f7ef] text-[#0a7d43]" : "bg-[#f0f0f0] text-[#717171]"}`}>
-                            {m.active ? "Aktif" : "Nonaktif"}
-                          </span>
+                          {editPromo?.id === m.id ? (
+                            <input className="field !py-1.5 !px-2.5 text-xs mono uppercase w-32" value={editPromo.code} onChange={(e) => setEditPromo({ ...editPromo, code: e.target.value.toUpperCase() })} />
+                          ) : (
+                            <span className="mono font-bold">{m.code}</span>
+                          )}
                         </td>
                         <td className={td}>
-                          <div className="flex gap-2 text-xs font-semibold">
-                            <button
-                              onClick={async () => {
-                                await supabase.from("promos").update({ active: !m.active }).eq("id", m.id);
-                                loadAll();
-                              }}
-                              className={m.active ? "text-[#a05a00] hover:underline" : "text-[#0a7d43] hover:underline"}
-                            >
-                              {m.active ? "Nonaktifkan" : "Aktifkan"}
-                            </button>
-                            <button
-                              onClick={async () => {
-                                await supabase.from("promos").delete().eq("id", m.id);
-                                flash("Promo dihapus");
-                                loadAll();
-                              }}
-                              className="text-[#ff385c] hover:underline"
-                            >
-                              Hapus
-                            </button>
-                          </div>
+                          {editPromo?.id === m.id ? (
+                            <input type="number" className="field !py-1.5 !px-2.5 text-xs w-16" value={editPromo.disc_pct} onChange={(e) => setEditPromo({ ...editPromo, disc_pct: Number(e.target.value) })} />
+                          ) : (
+                            `${m.disc_pct}%`
+                          )}
+                        </td>
+                        <td className={td}>
+                          {editPromo?.id === m.id ? (
+                            <label className="flex items-center gap-1.5 text-xs font-semibold cursor-pointer">
+                              <input type="checkbox" className="accent-[#ff385c] w-4 h-4" checked={editPromo.active} onChange={(e) => setEditPromo({ ...editPromo, active: e.target.checked })} />
+                              Aktif
+                            </label>
+                          ) : (
+                            <span className={`text-[11px] font-bold rounded-full px-2 py-1 ${m.active ? "bg-[#e8f7ef] text-[#0a7d43]" : "bg-[#f0f0f0] text-[#717171]"}`}>
+                              {m.active ? "Aktif" : "Nonaktif"}
+                            </span>
+                          )}
+                        </td>
+                        <td className={td}>
+                          {editPromo?.id === m.id ? (
+                            <div className="flex gap-1.5">
+                              <button
+                                disabled={saving === m.id}
+                                onClick={() => guard(m.id, async () => {
+                                  await supabase.from("promos").update(editPromo).eq("id", m.id);
+                                  setEditPromo(null);
+                                }, "Promo diperbarui")}
+                                className="text-xs font-bold text-white bg-[#ff385c] hover:bg-[#e12b4d] rounded-full px-3 py-1.5 transition"
+                              >
+                                Simpan
+                              </button>
+                              <button onClick={() => setEditPromo(null)} className="text-xs font-semibold text-[#717171] hover:text-[#111] px-2">Batal</button>
+                            </div>
+                          ) : (
+                            <div className="flex gap-2 text-xs font-semibold">
+                              <button onClick={() => setEditPromo(m)} className="text-[#3730a3] hover:underline">Edit</button>
+                              <button
+                                onClick={() => guard(m.id, () => supabase.from("promos").update({ active: !m.active }).eq("id", m.id), m.active ? "Promo dinonaktifkan" : "Promo diaktifkan")}
+                                className={m.active ? "text-[#a05a00] hover:underline" : "text-[#0a7d43] hover:underline"}
+                              >
+                                {m.active ? "Nonaktif" : "Aktifkan"}
+                              </button>
+                              <button
+                                onClick={() => guard(m.id, () => supabase.from("promos").delete().eq("id", m.id), "Promo dihapus")}
+                                className="text-[#ff385c] hover:underline"
+                              >
+                                Hapus
+                              </button>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     ))}
