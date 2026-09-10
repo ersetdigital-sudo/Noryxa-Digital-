@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import ProductCard from "@/components/ProductCard";
-import { PRODUCTS, CATEGORIES } from "@/lib/data";
+import { PRODUCTS, CATEGORIES, type Product } from "@/lib/data";
+import { fetchProducts } from "@/lib/catalog";
 
 export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState("Semua");
@@ -12,7 +13,14 @@ export default function HomePage() {
   const [sortBy, setSortBy] = useState("pop");
   const [searchQuery, setSearchQuery] = useState("");
   const [shownCount, setShownCount] = useState(10);
+  const [products, setProducts] = useState<Product[]>(PRODUCTS);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetchProducts().then((remote) => {
+      if (remote.length > 0) setProducts(remote);
+    });
+  }, []);
 
   const toggleFilter = useCallback((filter: string) => {
     setActiveFilters((prev) => {
@@ -32,7 +40,7 @@ export default function HomePage() {
     setShownCount(10);
   }, []);
 
-  const filteredProducts = PRODUCTS.filter((p) => {
+  const filteredProducts = products.filter((p) => {
     const matchCategory =
       activeCategory === "Semua" ||
       p.category === activeCategory ||

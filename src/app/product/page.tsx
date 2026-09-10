@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { DENOMS, PAYS, rupiah } from "@/lib/data";
+import { fetchDenoms, fetchPays, checkPromo, type Denom, type Pay } from "@/lib/catalog";
 
 export default function ProductPage() {
   const router = useRouter();
@@ -16,9 +17,20 @@ export default function ProductPage() {
   const [promoMsg, setPromoMsg] = useState("");
   const [promoMsgClass, setPromoMsgClass] = useState("text-xs mt-1.5 text-[#717171]");
   const [disc, setDisc] = useState(0);
+  const [denoms, setDenoms] = useState<[string, number][]>(DENOMS as unknown as [string, number][]);
+  const [pays, setPays] = useState<[string, string, number][]>(PAYS as unknown as [string, string, number][]);
 
-  const denom = selectedDenom !== null ? DENOMS[selectedDenom] : null;
-  const pay = selectedPay !== null ? PAYS[selectedPay] : null;
+  useEffect(() => {
+    fetchDenoms("Mobile Legends").then((d: Denom[]) => {
+      if (d.length > 0) setDenoms(d.map((x) => [x.label, x.price] as [string, number]));
+    });
+    fetchPays().then((p: Pay[]) => {
+      if (p.length > 0) setPays(p.map((x) => [x.label, x.kind, x.fee] as [string, string, number]));
+    });
+  }, []);
+
+  const denom = selectedDenom !== null ? denoms[selectedDenom] : null;
+  const pay = selectedPay !== null ? pays[selectedPay] : null;
 
   const fee = pay ? pay[2] : 0;
   const base = denom ? denom[1] : 0;
@@ -28,15 +40,22 @@ export default function ProductPage() {
 
   const nickname = uid.length >= 6 ? "Akun ditemukan: Player" + uid.slice(-4) : null;
 
-  const handlePromo = () => {
+  const handlePromo = async () => {
     const v = promo.trim().toUpperCase();
-    if (v === "NORYXA10") {
-      setDisc(0.1);
-      setPromoMsg("Kode berhasil dipakai — diskon 10%.");
+    if (!v) {
+      setDisc(0);
+      setPromoMsg("Masukkan kode promo dulu.");
+      setPromoMsgClass("text-xs mt-1.5 text-[#ff385c]");
+      return;
+    }
+    const pct = await checkPromo(v);
+    if (pct > 0) {
+      setDisc(pct);
+      setPromoMsg(`Kode berhasil dipakai — diskon ${Math.round(pct * 100)}%.`);
       setPromoMsgClass("text-xs mt-1.5 text-[#0a7d43] font-semibold");
     } else {
       setDisc(0);
-      setPromoMsg(v ? "Kode promo tidak ditemukan." : "Masukkan kode promo dulu.");
+      setPromoMsg("Kode promo tidak ditemukan.");
       setPromoMsgClass("text-xs mt-1.5 text-[#ff385c]");
     }
   };
