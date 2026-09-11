@@ -15,6 +15,7 @@ const GAME_IMAGES: Record<string, string> = {
   "Roblox": "https://img.lootbar.com/file/69dda42d9630195bcb523af1zpgEzZLe03?fop=imageView/2/w/200/h/200/q/80",
   "Valorant": "https://img.lootbar.com/file/68a7079b485cfae98de3fe70Reu2CAxY03?fop=imageView/2/w/200/h/200/q/80",
   "Steam Wallet": "https://needmcp.com/storage/gallery/game-store/b09347019ee70f90e5517b2ae2f4c2d4-large.avif",
+  "Magic Chess": "https://res.cloudinary.com/dqjh7utdb/image/upload/v1789114696/noryxa/tog2ses6ra4kijgspgdv.jpg",
 };
 
 function getGameImage(product: string): string {
