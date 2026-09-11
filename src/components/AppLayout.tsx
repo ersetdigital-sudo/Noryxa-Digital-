@@ -13,7 +13,13 @@ const PAGE_TITLES: Record<string, string> = {
   "/login": "Masuk / Daftar",
 };
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+interface AppLayoutProps {
+  children: React.ReactNode;
+  searchRef?: React.RefObject<HTMLInputElement | null>;
+  onSearch?: () => void;
+}
+
+export default function AppLayout({ children, searchRef, onSearch }: AppLayoutProps) {
   const pathname = usePathname();
   const title = PAGE_TITLES[pathname] || "Noryxa Digital";
   const showHeader = pathname !== "/login";
@@ -22,7 +28,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen">
       <Sidebar />
       <div className="flex-1 min-w-0">
-        {showHeader && <Header title={title} showSearch={pathname === "/"} showBack={pathname !== "/"} backHref="/" />}
+        {showHeader && <Header title={title} showSearch={pathname === "/"} showBack={pathname !== "/"} backHref="/" searchRef={searchRef} onSearch={onSearch} />}
         {children}
       </div>
     </div>

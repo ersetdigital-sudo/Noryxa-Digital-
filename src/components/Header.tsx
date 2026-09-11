@@ -12,6 +12,8 @@ interface HeaderProps {
   backHref?: string;
   backLabel?: string;
   rightBadge?: React.ReactNode;
+  searchRef?: React.RefObject<HTMLInputElement | null>;
+  onSearch?: () => void;
 }
 
 export default function Header({
@@ -21,6 +23,8 @@ export default function Header({
   backHref = "/",
   backLabel = "Katalog",
   rightBadge,
+  searchRef,
+  onSearch,
 }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -100,6 +104,7 @@ export default function Header({
               </svg>
               <input
                 id="search"
+                ref={searchRef}
                 type="search"
                 placeholder="Cari game atau voucher…"
                 className="w-full text-sm rounded-full border-2 border-[#eee] bg-[#fafafa] pl-10 pr-4 py-2 outline-none focus:border-[#ff385c] focus:bg-white transition"

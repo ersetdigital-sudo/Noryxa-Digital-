@@ -17,7 +17,11 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchProducts().then((remote) => {
-      if (remote.length > 0) setProducts(remote);
+      if (remote.length > 0) {
+        const localNames = new Set(PRODUCTS.map((p) => p.name));
+        const merged = [...remote, ...PRODUCTS.filter((p) => !localNames.has(p.name))];
+        setProducts(merged);
+      }
     });
   }, []);
 
@@ -38,6 +42,14 @@ export default function HomePage() {
     setSearchQuery(searchRef.current?.value?.trim().toLowerCase() || "");
     setShownCount(10);
   }, []);
+
+  useEffect(() => {
+    const el = searchRef.current;
+    if (!el) return;
+    const handler = () => handleSearch();
+    el.addEventListener("input", handler);
+    return () => el.removeEventListener("input", handler);
+  }, [handleSearch]);
 
   const filteredProducts = products.filter((p) => {
     const matchCategory =
@@ -61,7 +73,7 @@ export default function HomePage() {
   const hasMore = shownCount < sortedProducts.length;
 
   return (
-    <AppLayout>
+    <AppLayout searchRef={searchRef} onSearch={handleSearch}>
       <main className="px-4 sm:px-6 pb-16">
           {/* HERO */}
           <section className="hero mt-5 rounded-[20px] overflow-hidden relative bg-[#111318] shadow-[0_18px_44px_rgba(17,17,17,.18)]">
