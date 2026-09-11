@@ -329,8 +329,8 @@ export default function LoginPage() {
                     <input
                       type={showPass ? "text" : "password"}
                       required
-                      minLength={8}
-                      placeholder="Minimal 8 karakter"
+                      minLength={6}
+                      placeholder="Minimal 6 karakter"
                       className="field pl-12 pr-12"
                       autoComplete="new-password"
                     />
