@@ -33,7 +33,7 @@ interface ProductRow {
 }
 
 const ADMIN_PASS = "noryxa-admin-2026";
-const CATEGORIES = ["Mobile Games", "PC Games", "Voucher", "PPOB", "Entertainment", "Top Up Cepat"];
+const CATEGORIES = ["Mobile Games"];
 
 const shell = "card overflow-hidden";
 const panelHead = "bg-[#f7f7f7] px-5 py-3 border-b-2 border-[#eee] flex items-center justify-between gap-3 flex-wrap";
