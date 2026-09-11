@@ -18,15 +18,13 @@ const storeLinks: NavLink[] = [
     icon: <svg className="ico" viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5Z"></path></svg>,
   },
   {
-    href: "/",
+    href: "/ppob",
     label: "PPOB Bills",
-    disabled: true,
     icon: <svg className="ico" viewBox="0 0 24 24"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2Z"></path><path d="M9 7h6M9 11h6M9 15h4"></path></svg>,
   },
   {
-    href: "/",
+    href: "/vouchers",
     label: "Vouchers",
-    disabled: true,
     icon: <svg className="ico" viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"></path><path d="M14 6v12"></path></svg>,
   },
 ];
@@ -51,9 +49,8 @@ const toolLinks: NavLink[] = [
 
 const accountLinks: NavLink[] = [
   {
-    href: "/",
+    href: "/dashboard",
     label: "My Dashboard",
-    disabled: true,
     icon: <svg className="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>,
   },
   {
