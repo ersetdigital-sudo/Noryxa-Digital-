@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { getUser, signOut, onAuthChange } from "@/lib/auth";
+import { useSettings } from "@/lib/useSettings";
 import type { User } from "@supabase/supabase-js";
 
 interface HeaderProps {
@@ -26,6 +27,7 @@ export default function Header({
   searchRef,
   onSearch,
 }: HeaderProps) {
+  const { waLink } = useSettings();
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -153,7 +155,7 @@ export default function Header({
                         Cek Transaksi
                       </Link>
                       <a
-                        href="https://wa.me/6281234567890"
+                        href={waLink("Halo Noryxa Digital, ada yang ingin saya tanyakan.")}
                         className="navlink"
                         target="_blank"
                         rel="noopener noreferrer"

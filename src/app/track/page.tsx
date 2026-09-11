@@ -5,8 +5,7 @@ import Link from "next/link";
 import AppLayout from "@/components/AppLayout";
 import { rupiah } from "@/lib/data";
 import { findOrderByInv, type Order } from "@/lib/orders";
-
-const WA = "6281234567890";
+import { useSettings } from "@/lib/useSettings";
 
 function getOrders(): Order[] {
   try {
@@ -33,6 +32,7 @@ function getGameImage(product: string): string {
 }
 
 export default function TrackPage() {
+  const { settings, loaded, waLink } = useSettings();
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [invoiceInput, setInvoiceInput] = useState("");
   const [error, setError] = useState("");
@@ -69,9 +69,7 @@ export default function TrackPage() {
       setResultOrder(null);
       setNotFound(true);
       setNfWaLink(
-        `https://wa.me/${WA}?text=${encodeURIComponent(
-          "Halo Noryxa Digital, saya mau cek pesanan dengan invoice " + v
-        )}`
+        waLink("Halo Noryxa Digital, saya mau cek pesanan dengan invoice " + v)
       );
     }
   }, []);
@@ -113,9 +111,9 @@ export default function TrackPage() {
   };
 
   const resultWaLink = resultOrder
-    ? `https://wa.me/${WA}?text=${encodeURIComponent(
+    ? waLink(
         `Halo Noryxa Digital, saya mau tanya pesanan:\nInvoice: ${resultOrder.inv}\nProduk: ${resultOrder.product} — ${resultOrder.denom}\nUser ID: ${resultOrder.uid}\nStatus: ${resultOrder.status}`
-      )}`
+      )
     : "";
 
   return (

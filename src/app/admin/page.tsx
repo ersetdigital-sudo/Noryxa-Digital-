@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { rupiah } from "@/lib/data";
 import { uploadImage } from "@/lib/cloudinary";
+import { useSettings } from "@/lib/useSettings";
 import type { Denom, Pay, Promo } from "@/lib/catalog";
 
-type Tab = "orders" | "products" | "denoms" | "pays" | "promos";
+type Tab = "orders" | "products" | "denoms" | "pays" | "promos" | "settings";
 
 interface OrderRow {
   id: string;
@@ -41,9 +42,11 @@ const panelTitle = "text-sm font-bold flex items-center gap-2";
 const iconBox = "w-10 h-10 rounded-xl bg-[#f7f7f7] grid place-items-center shrink-0";
 
 export default function AdminPage() {
+  const { settings, loaded, updateWhatsApp } = useSettings();
   const [authed, setAuthed] = useState(false);
   const [pass, setPass] = useState("");
   const [tab, setTab] = useState<Tab>("orders");
+  const [waInput, setWaInput] = useState("");
 
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [products, setProducts] = useState<ProductRow[]>([]);
@@ -99,6 +102,10 @@ export default function AdminPage() {
     if (authed) loadAll();
   }, [authed, loadAll]);
 
+  useEffect(() => {
+    if (loaded) setWaInput(settings.whatsapp);
+  }, [loaded, settings.whatsapp]);
+
   const guard = async (id: string, fn: () => PromiseLike<unknown>, okMsg: string) => {
     setSaving(id);
     try {
@@ -143,6 +150,7 @@ export default function AdminPage() {
     { id: "denoms", label: "Nominal", icon: <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path> },
     { id: "pays", label: "Pembayaran", icon: <><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="M2 10h20"></path></> },
     { id: "promos", label: "Promo", icon: <><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"></path><path d="M14 6v12"></path></> },
+    { id: "settings", label: "Settings", icon: <><circle cx="12" cy="12" r="3"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></> },
   ];
 
   const th = "text-left text-[11px] font-bold text-[#9a9a9a] uppercase tracking-wider px-3 py-2";
@@ -906,6 +914,47 @@ export default function AdminPage() {
               </div>
             </section>
           </>
+        )}
+
+        {/* ============ SETTINGS ============ */}
+        {tab === "settings" && (
+          <section className={shell}>
+            <div className={panelHead}>
+              <h2 className={panelTitle}>
+                <svg className="ico w-4 h-4 text-[#ff385c]" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>
+                Pengaturan Umum
+              </h2>
+            </div>
+            <div className="p-5 space-y-6">
+              <div>
+                <label className="text-sm font-bold text-[#111318] block mb-2">Nomor WhatsApp CS</label>
+                <p className="text-xs text-[#717171] mb-3">Nomor ini digunakan di semua tombol &quot;Hubungi CS&quot; di seluruh halaman.</p>
+                <div className="flex gap-3 max-w-md">
+                  <input
+                    className="field flex-1 mono"
+                    placeholder="6281234567890"
+                    value={waInput}
+                    onChange={(e) => setWaInput(e.target.value)}
+                  />
+                  <button
+                    onClick={() => {
+                      updateWhatsApp(waInput);
+                      flash("Nomor WhatsApp disimpan");
+                    }}
+                    className="bg-[#ff385c] hover:bg-[#e12b4d] transition text-white text-sm font-semibold rounded-full px-6 py-2.5 shrink-0"
+                  >
+                    Simpan
+                  </button>
+                </div>
+                <p className="text-xs text-[#717171] mt-2">
+                  Saat ini: <span className="mono font-semibold text-[#111318]">{settings.whatsapp}</span>
+                </p>
+                <p className="text-xs text-[#9a9a9a] mt-1">
+                  Link: <span className="mono">{`https://wa.me/${settings.whatsapp}`}</span>
+                </p>
+              </div>
+            </div>
+          </section>
         )}
       </main>
     </div>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { rupiah } from "@/lib/data";
 import { saveOrder, updateOrderStatus } from "@/lib/orders";
 import { supabase } from "@/lib/supabase";
+import { useSettings } from "@/lib/useSettings";
 
 const FAQ = [
   ["Berapa lama pesanan diproses?", "Rata-rata 3 detik setelah pembayaran terkonfirmasi. Saat jam sibuk maksimal 5 menit."],
@@ -14,6 +15,7 @@ const FAQ = [
 ];
 
 export default function PaymentPage() {
+  const { waLink } = useSettings();
   const [product, setProduct] = useState("Mobile Legends");
   const [denom, setDenom] = useState("86 Diamonds");
   const [uid, setUid] = useState("—");
@@ -140,7 +142,7 @@ export default function PaymentPage() {
   const confirmPaid = () => {
     setPaidStatus(true);
     updateOrderStatus(inv, "Sedang diverifikasi");
-    window.open("https://wa.me/6281234567890?text=" + waMsg, "_blank");
+    window.open(waLink(waMsg), "_blank");
   };
 
   const faq1Text = isVA
@@ -581,7 +583,7 @@ export default function PaymentPage() {
               Saya sudah bayar
             </button>
             <a
-              href={`https://wa.me/6281234567890?text=${waMsg}`}
+              href={waLink(waMsg)}
               className="w-full mt-2.5 border-2 border-[#eee] hover:border-[#ff385c] hover:text-[#ff385c] transition text-sm font-semibold rounded-full py-3 flex items-center justify-center gap-2"
             >
               <svg className="ico" viewBox="0 0 24 24">

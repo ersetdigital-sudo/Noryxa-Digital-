@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { getUser, signOut, onAuthChange } from "@/lib/auth";
+import { useSettings } from "@/lib/useSettings";
 
 export type NavLink = {
   href: string;
@@ -175,6 +176,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 function SidebarMobile() {
+  const { waLink } = useSettings();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -237,7 +239,7 @@ function SidebarMobile() {
         </div>
 
         <a
-          href="https://wa.me/6281234567890"
+          href={waLink()}
           className="mt-4 flex items-center justify-center gap-2 bg-[#ff385c] text-white text-sm font-semibold rounded-full py-3 hover:bg-[#e12b4d] transition shadow-[0_6px_18px_rgba(255,56,92,.3)]"
         >
           <svg className="ico" viewBox="0 0 24 24">
@@ -251,6 +253,7 @@ function SidebarMobile() {
 }
 
 export default function Sidebar() {
+  const { waLink } = useSettings();
   return (
     <>
       {/* DESKTOP */}
@@ -271,7 +274,7 @@ export default function Sidebar() {
         <SidebarNav />
 
         <a
-          href="https://wa.me/6281234567890"
+          href={waLink()}
           className="mt-auto flex items-center justify-center gap-2 bg-[#ff385c] text-white text-sm font-semibold rounded-full py-3 hover:bg-[#e12b4d] transition shadow-[0_6px_18px_rgba(255,56,92,.3)]"
         >
           <svg className="ico" viewBox="0 0 24 24">
