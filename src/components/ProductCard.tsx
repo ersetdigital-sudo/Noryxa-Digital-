@@ -12,7 +12,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const hasInstant = tags.includes("instant");
 
   return (
-    <Link href="/product" className="card p-2.5 block group">
+    <Link href={`/product?game=${encodeURIComponent(name)}`} className="card p-2.5 block group">
       <div className="tile-art">
         <img src={img} alt={name} loading="lazy" />
         {hasPromo && (

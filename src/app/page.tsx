@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import AppLayout from "@/components/AppLayout";
 import ProductCard from "@/components/ProductCard";
-import { PRODUCTS, CATEGORIES, type Product } from "@/lib/data";
+import { CATEGORIES, type Product } from "@/lib/data";
 import { fetchProducts } from "@/lib/catalog";
 
 export default function HomePage() {
@@ -12,17 +12,11 @@ export default function HomePage() {
   const [sortBy, setSortBy] = useState("pop");
   const [searchQuery, setSearchQuery] = useState("");
   const [shownCount, setShownCount] = useState(10);
-  const [products, setProducts] = useState<Product[]>(PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetchProducts().then((remote) => {
-      if (remote.length > 0) {
-        const localNames = new Set(PRODUCTS.map((p) => p.name));
-        const merged = [...remote, ...PRODUCTS.filter((p) => !localNames.has(p.name))];
-        setProducts(merged);
-      }
-    });
+    fetchProducts().then(setProducts);
   }, []);
 
   const toggleFilter = useCallback((filter: string) => {

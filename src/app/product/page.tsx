@@ -1,13 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import AppLayout from "@/components/AppLayout";
-import { DENOMS, PAYS, rupiah } from "@/lib/data";
-import { fetchDenoms, fetchPays, checkPromo, type Denom, type Pay } from "@/lib/catalog";
+import { rupiah, type Product } from "@/lib/data";
+import { fetchDenoms, fetchPays, fetchProducts, checkPromo, type Denom, type Pay } from "@/lib/catalog";
 
 export default function ProductPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#f7f7f7] grid place-items-center text-sm text-[#717171]">Memuat...</div>}>
+      <ProductContent />
+    </Suspense>
+  );
+}
+
+function ProductContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const gameName = searchParams.get("game") || "";
+
   const [selectedDenom, setSelectedDenom] = useState<number | null>(null);
   const [selectedPay, setSelectedPay] = useState<number | null>(null);
   const [uid, setUid] = useState("");
@@ -16,23 +28,30 @@ export default function ProductPage() {
   const [promoMsg, setPromoMsg] = useState("");
   const [promoMsgClass, setPromoMsgClass] = useState("text-xs mt-1.5 text-[#717171]");
   const [disc, setDisc] = useState(0);
-  const [denoms, setDenoms] = useState<[string, number][]>(DENOMS as unknown as [string, number][]);
-  const [pays, setPays] = useState<[string, string, number][]>(PAYS as unknown as [string, string, number][]);
+  const [denoms, setDenoms] = useState<Denom[]>([]);
+  const [pays, setPays] = useState<Pay[]>([]);
+  const [product, setProduct] = useState<Product | null>(null);
 
   useEffect(() => {
-    fetchDenoms("Mobile Legends").then((d: Denom[]) => {
-      if (d.length > 0) setDenoms(d.map((x) => [x.label, x.price] as [string, number]));
+    if (!gameName) return;
+    fetchProducts().then((all) => {
+      const found = all.find((p) => p.name === gameName);
+      if (found) setProduct(found);
     });
-    fetchPays().then((p: Pay[]) => {
-      if (p.length > 0) setPays(p.map((x) => [x.label, x.kind, x.fee] as [string, string, number]));
-    });
-  }, []);
+    fetchDenoms(gameName).then(setDenoms);
+    fetchPays().then(setPays);
+  }, [gameName]);
+
+  useEffect(() => {
+    setSelectedDenom(null);
+    setSelectedPay(null);
+  }, [gameName]);
 
   const denom = selectedDenom !== null ? denoms[selectedDenom] : null;
   const pay = selectedPay !== null ? pays[selectedPay] : null;
 
-  const fee = pay ? pay[2] : 0;
-  const base = denom ? denom[1] : 0;
+  const fee = pay ? pay.fee : 0;
+  const base = denom ? denom.price : 0;
   const d = Math.round(base * disc);
   const total = base ? base + fee - d : 0;
   const ready = !!(denom && pay && uid.length >= 6);
@@ -60,21 +79,33 @@ export default function ProductPage() {
   };
 
   const checkout = () => {
-    if (!denom || !pay) return;
+    if (!denom || !pay || !gameName) return;
     const order = {
-      product: "Mobile Legends",
-      denom: denom[0],
+      product: gameName,
+      denom: denom.label,
       uid: uid + (zone ? " (" + zone + ")" : ""),
-      pay: pay[0],
-      base: denom[1],
-      fee: pay[2],
-      disc: Math.round(denom[1] * disc),
+      pay: pay.label,
+      base: denom.price,
+      fee: pay.fee,
+      disc: Math.round(denom.price * disc),
     };
     try {
       sessionStorage.setItem("noryxaOrder", JSON.stringify(order));
     } catch {}
     router.push("/payment");
   };
+
+  if (!gameName) {
+    return (
+      <AppLayout>
+        <main className="px-4 sm:px-6 pb-28 lg:pb-16">
+          <div className="card p-10 text-center mt-5">
+            <p className="text-sm text-[#717171]">Game tidak ditemukan. <a href="/" className="text-[#ff385c] font-semibold hover:underline">Kembali ke beranda</a></p>
+          </div>
+        </main>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
@@ -83,22 +114,21 @@ export default function ProductPage() {
           <section className="mt-5 rounded-[20px] overflow-hidden relative bg-[#111318]">
             <div className="hero-glow"></div>
             <div className="relative flex items-center gap-4 sm:gap-5 p-5 sm:p-7">
-              <img
-                src="/images/3ba2d47c-f372-4e33-bbd8-712410f0f909.png"
-                alt="Mobile Legends"
-                className="w-[86px] h-[86px] sm:w-[112px] sm:h-[112px] rounded-2xl object-cover border border-white/15 shadow-[0_14px_34px_rgba(0,0,0,.5)]"
-              />
+              {product?.img && (
+                <img
+                  src={product.img}
+                  alt={gameName}
+                  className="w-[86px] h-[86px] sm:w-[112px] sm:h-[112px] rounded-2xl object-cover border border-white/15 shadow-[0_14px_34px_rgba(0,0,0,.5)]"
+                />
+              )}
               <div className="min-w-0">
                 <h2 className="display text-white text-xl sm:text-3xl font-bold leading-tight">
-                  Mobile Legends: Bang Bang
+                  {gameName}
                 </h2>
                 <p className="text-white/60 text-xs sm:text-sm mt-1">
-                  Moonton · Top up diamond resmi
+                  Top up {gameName} resmi
                 </p>
                 <div className="flex flex-wrap gap-2 mt-3 text-[11px]">
-                  <span className="bg-white/10 text-white rounded-full px-2.5 py-1">
-                    ⭐ 4.9 / 12.480 ulasan
-                  </span>
                   <span className="bg-[#ff385c] text-white rounded-full px-2.5 py-1 font-semibold">
                     Proses instan
                   </span>
@@ -158,21 +188,25 @@ export default function ProductPage() {
                   <span className="step-no">2</span>
                   <h3 className="display text-base font-bold">Pilih Nominal</h3>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  {DENOMS.map((d, i) => (
-                    <button
-                      key={d[0]}
-                      className="opt text-left border-2 border-[#eee] rounded-[16px] p-3 bg-white"
-                      aria-pressed={selectedDenom === i}
-                      onClick={() => setSelectedDenom(i)}
-                    >
-                      <span className="block text-[13px] font-semibold leading-tight">{d[0]}</span>
-                      <span className="opt-price block text-[13px] font-bold text-[#111] mt-1">
-                        {rupiah(d[1])}
-                      </span>
-                    </button>
-                  ))}
-                </div>
+                {denoms.length === 0 ? (
+                  <p className="text-sm text-[#717171]">Belum ada nominal tersedia untuk game ini.</p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    {denoms.map((d, i) => (
+                      <button
+                        key={d.id}
+                        className="opt text-left border-2 border-[#eee] rounded-[16px] p-3 bg-white"
+                        aria-pressed={selectedDenom === i}
+                        onClick={() => setSelectedDenom(i)}
+                      >
+                        <span className="block text-[13px] font-semibold leading-tight">{d.label}</span>
+                        <span className="opt-price block text-[13px] font-bold text-[#111] mt-1">
+                          {rupiah(d.price)}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </section>
 
               {/* STEP 3 */}
@@ -181,21 +215,25 @@ export default function ProductPage() {
                   <span className="step-no">3</span>
                   <h3 className="display text-base font-bold">Metode Pembayaran</h3>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  {PAYS.map((p, i) => (
-                    <button
-                      key={p[0]}
-                      className="opt text-left border-2 border-[#eee] rounded-[16px] p-3 bg-white"
-                      aria-pressed={selectedPay === i}
-                      onClick={() => setSelectedPay(i)}
-                    >
-                      <span className="block text-[13px] font-semibold leading-tight">{p[0]}</span>
-                      <span className="block text-[11px] text-[#717171] mt-1">
-                        {p[1]}{p[2] ? " · +" + rupiah(p[2]) : " · gratis"}
-                      </span>
-                    </button>
-                  ))}
-                </div>
+                {pays.length === 0 ? (
+                  <p className="text-sm text-[#717171]">Belum ada metode pembayaran tersedia.</p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    {pays.map((p, i) => (
+                      <button
+                        key={p.id}
+                        className="opt text-left border-2 border-[#eee] rounded-[16px] p-3 bg-white"
+                        aria-pressed={selectedPay === i}
+                        onClick={() => setSelectedPay(i)}
+                      >
+                        <span className="block text-[13px] font-semibold leading-tight">{p.label}</span>
+                        <span className="block text-[11px] text-[#717171] mt-1">
+                          {p.kind}{p.fee ? " · +" + rupiah(p.fee) : " · gratis"}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </section>
 
               {/* STEP 4 */}
@@ -238,7 +276,7 @@ export default function ProductPage() {
               <section className="card p-5">
                 <h3 className="display text-base font-bold mb-2">Deskripsi</h3>
                 <p className="text-sm text-[#4a4a4a] leading-relaxed">
-                  Top up Diamond Mobile Legends: Bang Bang langsung ke User ID tanpa login akun.
+                  Top up {gameName} langsung ke User ID tanpa login akun.
                   Transaksi diproses otomatis 24 jam, rata-rata masuk dalam 3 detik setelah
                   pembayaran terkonfirmasi. Jika saldo tidak masuk, dana dikembalikan 100%.
                 </p>
@@ -251,11 +289,11 @@ export default function ProductPage() {
               <dl className="text-sm flex flex-col gap-2.5">
                 <div className="flex justify-between gap-3">
                   <dt className="text-[#717171]">Produk</dt>
-                  <dd className="font-semibold text-right">Mobile Legends</dd>
+                  <dd className="font-semibold text-right">{gameName}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="text-[#717171]">Nominal</dt>
-                  <dd className="font-semibold text-right">{denom ? denom[0] : "—"}</dd>
+                  <dd className="font-semibold text-right">{denom ? denom.label : "—"}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="text-[#717171]">User ID</dt>
@@ -265,7 +303,7 @@ export default function ProductPage() {
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="text-[#717171]">Pembayaran</dt>
-                  <dd className="font-semibold text-right">{pay ? pay[0] : "—"}</dd>
+                  <dd className="font-semibold text-right">{pay ? pay.label : "—"}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="text-[#717171]">Biaya layanan</dt>
