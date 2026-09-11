@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { rupiah } from "@/lib/data";
 import { uploadImage } from "@/lib/cloudinary";
 import { useSettings } from "@/lib/useSettings";
+import RupiahInput from "@/components/RupiahInput";
 import type { Denom, Pay, Promo } from "@/lib/catalog";
 
 type Tab = "overview" | "orders" | "products" | "denoms" | "pays" | "promos" | "settings";
@@ -390,7 +391,7 @@ export default function AdminPage() {
                   <select className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff385c] transition" value={np.category} onChange={(e) => setNp({ ...np, category: e.target.value })}>
                     {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
                   </select>
-                  <input className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff385c] transition" type="number" placeholder="Harga mulai" value={np.price || ""} onChange={(e) => setNp({ ...np, price: Number(e.target.value) })} />
+                  <RupiahInput value={np.price} onChange={(n) => setNp({ ...np, price: n })} placeholder="Harga mulai" />
                   <input className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff385c] transition" placeholder="Path gambar" value={np.img} onChange={(e) => setNp({ ...np, img: e.target.value })} />
                   <input className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff385c] transition" type="number" placeholder="Rank" value={np.rank} onChange={(e) => setNp({ ...np, rank: Number(e.target.value) })} />
                   <input className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff385c] transition" placeholder="Tags (promo,instant)" value={np.tags} onChange={(e) => setNp({ ...np, tags: e.target.value })} />
@@ -445,7 +446,7 @@ export default function AdminPage() {
                           </td>
                           <td className={td}>
                             {editProduct?.id === p.id ? (
-                              <input type="number" className="bg-white border border-[#e5e5e5] rounded-lg px-2.5 py-1.5 text-xs w-24 focus:outline-none focus:border-[#ff385c]" value={editProduct.price} onChange={(e) => setEditProduct({ ...editProduct, price: Number(e.target.value) })} />
+                              <RupiahInput value={editProduct.price} onChange={(n) => setEditProduct({ ...editProduct, price: n })} className="w-28" />
                             ) : <span className="font-semibold">{rupiah(p.price)}</span>}
                           </td>
                           <td className={td}>
@@ -512,7 +513,7 @@ export default function AdminPage() {
                 <h3 className="font-bold text-sm text-[#111] mb-3">Tambah Nominal — {denomGame}</h3>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   <input className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff385c] transition" placeholder="Label (86 Diamonds)" value={nd.label} onChange={(e) => setNd({ ...nd, label: e.target.value })} />
-                  <input className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff385c] transition" type="number" placeholder="Harga" value={nd.price || ""} onChange={(e) => setNd({ ...nd, price: Number(e.target.value) })} />
+                  <RupiahInput value={nd.price} onChange={(n) => setNd({ ...nd, price: n })} placeholder="Harga" />
                   <input className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff385c] transition" type="number" placeholder="Rank" value={nd.rank} onChange={(e) => setNd({ ...nd, rank: Number(e.target.value) })} />
                 </div>
                 <button onClick={() => guard("add-d", async () => {
@@ -539,7 +540,7 @@ export default function AdminPage() {
                       {filteredDenoms.map((d) => (
                         <tr key={d.id} className="hover:bg-[#fafafa]">
                           <td className={td}>{editDenom?.id === d.id ? <input className="bg-white border border-[#e5e5e5] rounded-lg px-2.5 py-1.5 text-xs w-40 focus:outline-none focus:border-[#ff385c]" value={editDenom.label} onChange={(e) => setEditDenom({ ...editDenom, label: e.target.value })} /> : <span className="font-semibold">{d.label}</span>}</td>
-                          <td className={td}>{editDenom?.id === d.id ? <input type="number" className="bg-white border border-[#e5e5e5] rounded-lg px-2.5 py-1.5 text-xs w-28 focus:outline-none focus:border-[#ff385c]" value={editDenom.price} onChange={(e) => setEditDenom({ ...editDenom, price: Number(e.target.value) })} /> : rupiah(d.price)}</td>
+                          <td className={td}>{editDenom?.id === d.id ? <RupiahInput value={editDenom.price} onChange={(n) => setEditDenom({ ...editDenom, price: n })} className="w-32" /> : rupiah(d.price)}</td>
                           <td className={td}>{editDenom?.id === d.id ? <input type="number" className="bg-white border border-[#e5e5e5] rounded-lg px-2.5 py-1.5 text-xs w-16 focus:outline-none focus:border-[#ff385c]" value={editDenom.rank} onChange={(e) => setEditDenom({ ...editDenom, rank: Number(e.target.value) })} /> : d.rank}</td>
                           <td className={td}>
                             {editDenom?.id === d.id ? (
@@ -573,7 +574,7 @@ export default function AdminPage() {
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   <input className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff385c] transition" placeholder="Label (QRIS)" value={npay.label} onChange={(e) => setNpay({ ...npay, label: e.target.value })} />
                   <input className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff385c] transition" placeholder="Jenis" value={npay.kind} onChange={(e) => setNpay({ ...npay, kind: e.target.value })} />
-                  <input className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff385c] transition" type="number" placeholder="Biaya" value={npay.fee} onChange={(e) => setNpay({ ...npay, fee: Number(e.target.value) })} />
+                  <RupiahInput value={npay.fee} onChange={(n) => setNpay({ ...npay, fee: n })} placeholder="Biaya" />
                   <input className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff385c] transition" type="number" placeholder="Rank" value={npay.rank} onChange={(e) => setNpay({ ...npay, rank: Number(e.target.value) })} />
                   <div className="flex items-center gap-2.5">
                     <button type="button" onClick={() => addPayImgRef.current?.click()} disabled={uploading === "add"} className="shrink-0 border border-[#e5e5e5] hover:border-[#ff385c] rounded-xl px-4 py-2.5 text-xs font-bold text-[#717171] hover:text-[#ff385c] transition">
@@ -621,7 +622,7 @@ export default function AdminPage() {
                             ) : y.img ? <img src={y.img} alt={y.label} className="w-10 h-10 rounded-lg object-cover border border-[#e5e5e5]" /> : <span className="text-xs text-[#ccc]">—</span>}
                           </td>
                           <td className={td}>{editPay?.id === y.id ? <input className="bg-white border border-[#e5e5e5] rounded-lg px-2.5 py-1.5 text-xs w-32 focus:outline-none focus:border-[#ff385c]" value={editPay.kind} onChange={(e) => setEditPay({ ...editPay, kind: e.target.value })} /> : <span className="text-xs">{y.kind}</span>}</td>
-                          <td className={td}>{editPay?.id === y.id ? <input type="number" className="bg-white border border-[#e5e5e5] rounded-lg px-2.5 py-1.5 text-xs w-20 focus:outline-none focus:border-[#ff385c]" value={editPay.fee} onChange={(e) => setEditPay({ ...editPay, fee: Number(e.target.value) })} /> : y.fee ? rupiah(y.fee) : "Gratis"}</td>
+                          <td className={td}>{editPay?.id === y.id ? <RupiahInput value={editPay.fee} onChange={(n) => setEditPay({ ...editPay, fee: n })} className="w-24" /> : y.fee ? rupiah(y.fee) : "Gratis"}</td>
                           <td className={td}>{editPay?.id === y.id ? <input type="number" className="bg-white border border-[#e5e5e5] rounded-lg px-2.5 py-1.5 text-xs w-16 focus:outline-none focus:border-[#ff385c]" value={editPay.rank} onChange={(e) => setEditPay({ ...editPay, rank: Number(e.target.value) })} /> : y.rank}</td>
                           <td className={td}>
                             {editPay?.id === y.id ? (
