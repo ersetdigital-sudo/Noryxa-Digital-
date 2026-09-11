@@ -333,6 +333,7 @@ export default function LoginPage() {
                     </svg>
                     <input
                       type={showPass ? "text" : "password"}
+                      name="password"
                       required
                       placeholder="Password kamu"
                       className="field pl-12 pr-12"
