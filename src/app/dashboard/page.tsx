@@ -8,11 +8,12 @@ import { findOrdersByEmail, type Order } from "@/lib/orders";
 import type { User } from "@supabase/supabase-js";
 
 const GAME_IMAGES: Record<string, string> = {
-  "Mobile Legends": "https://needmcp.com/storage/gallery/game-store/dd3ccb84374a3f9225f0515c31ac6910-large.avif",
-  "Honor of Kings": "https://needmcp.com/storage/gallery/game-store/bb1f7085972ba9a56836421cd3e6c14c-large.avif",
-  "Free Fire": "https://needmcp.com/storage/gallery/game-store/4563402943eaa28232822b1304db7bb1.avif",
-  "Valorant": "https://needmcp.com/storage/gallery/game-store/2ada39efe96392a41afa47af6fe6b32c-large.avif",
-  "Roblox": "https://needmcp.com/storage/gallery/game-store/620ad99df2c704d765036ae40064ba77-large.avif",
+  "Mobile Legends": "https://img.lootbar.com/file/68a708c81db899dc74a8b2e2NUvhsc5103?fop=imageView/2/w/200/h/200/q/80",
+  "PUBG Mobile": "https://img.lootbar.com/file/68a7091567ccf0d6e888b4b83H7ls1QJ03?fop=imageView/2/w/200/h/200/q/80",
+  "Free Fire": "https://img.lootbar.com/file/6a3e1af081e1baf5f45baa5eqShc5Vco03?fop=imageView/2/w/200/h/200/q/80",
+  "Honor of Kings": "https://img.lootbar.com/file/66753e0b027d7e7a76622203iLFXBIgV03?fop=imageView/2/w/200/h/200/q/80",
+  "Roblox": "https://img.lootbar.com/file/69dda42d9630195bcb523af1zpgEzZLe03?fop=imageView/2/w/200/h/200/q/80",
+  "Valorant": "https://img.lootbar.com/file/68a7079b485cfae98de3fe70Reu2CAxY03?fop=imageView/2/w/200/h/200/q/80",
   "Steam Wallet": "https://needmcp.com/storage/gallery/game-store/b09347019ee70f90e5517b2ae2f4c2d4-large.avif",
 };
 
