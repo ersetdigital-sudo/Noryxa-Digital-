@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn, signUp, getUser } from "@/lib/auth";
+import { signIn, getUser } from "@/lib/auth";
 
 const BENEFITS = [
   {
@@ -47,6 +47,7 @@ export default function LoginPage() {
     const email = String(data.get("email") || "").trim();
     const password = String(data.get("password") || "");
     const name = String(data.get("name") || "").trim();
+    const phone = String(data.get("phone") || "").trim();
 
     try {
       if (mode === "login") {
@@ -58,19 +59,22 @@ export default function LoginPage() {
           return;
         }
       } else {
-        const { data, error: err } = await signUp(email, password, name);
-        if (err) {
-          console.error("[supabase] signup error:", err.message, err.status, err.code);
-          if (err.message?.includes("already registered")) {
+        const res = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, fullName: name, phone }),
+        });
+        const result = await res.json();
+        if (!res.ok) {
+          console.error("[signup] error:", result.error);
+          if (result.error?.includes("already")) {
             setError("Email sudah terdaftar. Silakan masuk.");
-          } else if (err.status === 400) {
-            setError("Password harus minimal 6 karakter dan email valid.");
           } else {
-            setError(err.message || "Gagal daftar. Coba lagi.");
+            setError(result.error || "Gagal daftar. Coba lagi.");
           }
           return;
         }
-        console.log("[supabase] signup success:", data.user?.id);
+        console.log("[signup] success:", result.user?.id);
         try {
           localStorage.setItem("noryxaUser", JSON.stringify({ name, email }));
         } catch {}
@@ -309,6 +313,7 @@ export default function LoginPage() {
                     </svg>
                     <input
                       type="tel"
+                      name="phone"
                       required
                       placeholder="08xxxxxxxxxx"
                       className="field pl-12"
@@ -329,8 +334,7 @@ export default function LoginPage() {
                     <input
                       type={showPass ? "text" : "password"}
                       required
-                      minLength={6}
-                      placeholder="Minimal 6 karakter"
+                      placeholder="Password kamu"
                       className="field pl-12 pr-12"
                       autoComplete="new-password"
                     />
