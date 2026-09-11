@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
-import Header from "@/components/Header";
+import AppLayout from "@/components/AppLayout";
 import { DENOMS, PAYS, rupiah } from "@/lib/data";
 import { fetchDenoms, fetchPays, checkPromo, type Denom, type Pay } from "@/lib/catalog";
 
@@ -78,18 +77,7 @@ export default function ProductPage() {
   };
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-
-      <div className="flex-1 min-w-0">
-        <Header
-          title="Mobile Legends: Bang Bang"
-          showSearch={false}
-          showBack={true}
-          backHref="/"
-          backLabel="Katalog"
-        />
-
+    <AppLayout>
         <main className="px-4 sm:px-6 pb-28 lg:pb-16">
           {/* PRODUCT HEAD */}
           <section className="mt-5 rounded-[20px] overflow-hidden relative bg-[#111318]">
@@ -309,7 +297,6 @@ export default function ProductPage() {
             </aside>
           </div>
         </main>
-      </div>
 
       {/* MOBILE BUY BAR */}
       <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t-2 border-[#eee] px-4 py-3 flex items-center gap-3">
@@ -325,6 +312,6 @@ export default function ProductPage() {
           Beli Sekarang
         </button>
       </div>
-    </div>
+    </AppLayout>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import AppLayout from "@/components/AppLayout";
 import { rupiah } from "@/lib/data";
 import { findOrderByInv, type Order } from "@/lib/orders";
 
@@ -103,34 +104,8 @@ export default function TrackPage() {
     : "";
 
   return (
-    <div className="bg-[#f7f7f7] min-h-screen no-hover">
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b-2 border-[#eee]">
-        <div className="max-w-[820px] mx-auto flex items-center gap-3 px-4 sm:px-6 h-16">
-          <Link
-            href="/"
-            className="text-sm text-[#717171] hover:text-[#ff385c] transition inline-flex items-center gap-1.5"
-          >
-            <svg className="ico" viewBox="0 0 24 24">
-              <path d="M19 12H5M11 18l-6-6 6-6"></path>
-            </svg>
-            <span className="hidden sm:inline">Beranda</span>
-          </Link>
-          <Link href="/" className="flex items-center gap-2">
-            <img
-              src="/images/02f95e73-2700-481c-ab2b-4f9fbd473da7.png"
-              alt="Noryxa Digital"
-              width={28}
-              height={28}
-              className="w-7 h-7 rounded-lg shrink-0"
-            />
-            <span className="display text-[16px] font-bold">
-              Noryxa<span className="text-[#ff385c]"> Digital</span>
-            </span>
-          </Link>
-        </div>
-      </header>
-
-      <main className="max-w-[820px] mx-auto px-4 sm:px-6 py-8 pb-16">
+    <AppLayout>
+      <main className="px-4 sm:px-6 py-8 pb-16">
         <div className="text-center mb-6">
           <p className="eyebrow mb-2">Cek Transaksi</p>
           <h1 className="display text-2xl sm:text-3xl font-bold">Lacak pesanan kamu</h1>
@@ -327,6 +302,6 @@ export default function TrackPage() {
           Butuh bantuan cepat? CS Noryxa aktif 24 jam lewat WhatsApp.
         </p>
       </main>
-    </div>
+    </AppLayout>
   );
 }

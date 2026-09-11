@@ -31,7 +31,7 @@ const storeLinks: NavLink[] = [
 
 const toolLinks: NavLink[] = [
   {
-    href: "/",
+    href: "/check-region",
     label: "Check Region",
     icon: <svg className="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18-2.5-2.7-2.5-15.3 0-18Z"></path></svg>,
   },
@@ -41,7 +41,7 @@ const toolLinks: NavLink[] = [
     icon: <svg className="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>,
   },
   {
-    href: "/",
+    href: "/winrate",
     label: "Win Rate Calculator",
     icon: <svg className="ico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>,
   },
@@ -107,7 +107,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
           <NavItem
             key={link.label}
             link={link}
-            active={pathname === link.href && link.label === "Top Up Games"}
+            active={pathname === link.href}
             onNavigate={onNavigate}
           />
         ))}

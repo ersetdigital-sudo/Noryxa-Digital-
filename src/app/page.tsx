@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import Sidebar from "@/components/Sidebar";
-import Header from "@/components/Header";
+import AppLayout from "@/components/AppLayout";
 import ProductCard from "@/components/ProductCard";
 import { PRODUCTS, CATEGORIES, type Product } from "@/lib/data";
 import { fetchProducts } from "@/lib/catalog";
@@ -62,17 +61,8 @@ export default function HomePage() {
   const hasMore = shownCount < sortedProducts.length;
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-
-      <div className="flex-1 min-w-0">
-        <Header
-          title="Gaming Store Catalog"
-          showSearch={true}
-          showBack={false}
-        />
-
-        <main className="px-4 sm:px-6 pb-16">
+    <AppLayout>
+      <main className="px-4 sm:px-6 pb-16">
           {/* HERO */}
           <section className="hero mt-5 rounded-[20px] overflow-hidden relative bg-[#111318] shadow-[0_18px_44px_rgba(17,17,17,.18)]">
             <div className="hero-glow"></div>
@@ -244,7 +234,6 @@ export default function HomePage() {
             <span>Layanan 24 jam · Pembayaran QRIS, E-Wallet, VA Bank</span>
           </footer>
         </main>
-      </div>
-    </div>
+    </AppLayout>
   );
 }
