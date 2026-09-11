@@ -38,7 +38,10 @@ const CATEGORIES = ["Mobile Games"];
 
 export default function AdminPage() {
   const { settings, loaded, updateWhatsApp } = useSettings();
-  const [authed, setAuthed] = useState(false);
+  const [authed, setAuthed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return sessionStorage.getItem("noryxa_admin") === "1";
+  });
   const [pass, setPass] = useState("");
   const [tab, setTab] = useState<Tab>("overview");
   const [waInput, setWaInput] = useState("");
@@ -118,10 +121,10 @@ export default function AdminPage() {
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#ff385c] transition mb-3"
               value={pass}
               onChange={(e) => setPass(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && pass === ADMIN_PASS && setAuthed(true)}
+              onKeyDown={(e) => { if (e.key === "Enter" && pass === ADMIN_PASS) { sessionStorage.setItem("noryxa_admin", "1"); setAuthed(true); } }}
             />
             <button
-              onClick={() => pass === ADMIN_PASS ? setAuthed(true) : flash("Password salah")}
+              onClick={() => { if (pass === ADMIN_PASS) { sessionStorage.setItem("noryxa_admin", "1"); setAuthed(true); } else { flash("Password salah"); } }}
               className="w-full bg-[#ff385c] hover:bg-[#e12b4d] transition text-white text-sm font-bold rounded-xl py-3"
             >
               Masuk
@@ -176,7 +179,7 @@ export default function AdminPage() {
           ))}
         </nav>
         <div className="p-3 border-t border-white/10">
-          <button onClick={() => setAuthed(false)} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/50 hover:text-white hover:bg-white/5 transition">
+          <button onClick={() => { sessionStorage.removeItem("noryxa_admin"); setAuthed(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/50 hover:text-white hover:bg-white/5 transition">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>
             </svg>
