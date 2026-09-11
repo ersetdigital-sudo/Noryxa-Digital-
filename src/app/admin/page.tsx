@@ -491,7 +491,7 @@ export default function AdminPage() {
 
           {/* ============ DENOMS ============ */}
           {tab === "denoms" && (() => {
-            const gameNames = [...new Set(denoms.map((d) => d.product_name))];
+            const gameNames = products.length > 0 ? products.map((p) => p.name) : [...new Set(denoms.map((d) => d.product_name))];
             const filteredDenoms = denoms.filter((d) => d.product_name === denomGame);
             return (
             <div className="space-y-4">

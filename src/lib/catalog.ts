@@ -57,7 +57,19 @@ export async function fetchDenoms(productName: string): Promise<Denom[]> {
     console.warn("[supabase] fetchDenoms:", error.message);
     return [];
   }
-  return data || [];
+  if (data && data.length > 0) return data;
+
+  // Fallback: partial match (e.g. "Mobile Legends" vs "Mobile Legends: Bang Bang")
+  const { data: all } = await supabase
+    .from("denoms")
+    .select("*")
+    .order("rank", { ascending: true });
+  if (!all) return [];
+  const lower = productName.toLowerCase();
+  return all.filter((d) => {
+    const n = d.product_name.toLowerCase();
+    return n.includes(lower) || lower.includes(n);
+  });
 }
 
 export async function fetchPays(): Promise<Pay[]> {
