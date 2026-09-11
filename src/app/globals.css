@@ -448,15 +448,15 @@
     cursor: pointer;
   }
   .opt:hover {
-    border-color: #cfcfcf;
+    border-color: #111318;
   }
   .opt[aria-pressed="true"] {
-    border-color: var(--accent) !important;
-    background: #fff5f7;
-    box-shadow: 0 6px 18px rgba(255, 56, 92, 0.12);
+    border-color: #111318 !important;
+    background: #fff;
+    box-shadow: 0 4px 14px rgba(17, 19, 24, 0.12);
   }
   .opt[aria-pressed="true"] .opt-price {
-    color: var(--accent);
+    color: #111318;
   }
 
   .field {
@@ -469,7 +469,7 @@
     transition: border-color 0.15s;
   }
   .field:focus {
-    border-color: var(--accent);
+    border-color: #111318;
   }
 
   .step-no {
