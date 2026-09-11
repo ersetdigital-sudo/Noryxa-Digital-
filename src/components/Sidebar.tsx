@@ -22,11 +22,13 @@ const storeLinks: NavLink[] = [
     href: "/ppob",
     label: "PPOB Bills",
     icon: <svg className="ico" viewBox="0 0 24 24"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2Z"></path><path d="M9 7h6M9 11h6M9 15h4"></path></svg>,
+    disabled: true,
   },
   {
     href: "/vouchers",
     label: "Vouchers",
     icon: <svg className="ico" viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8Z"></path><path d="M14 6v12"></path></svg>,
+    disabled: true,
   },
 ];
 
@@ -35,6 +37,7 @@ const toolLinks: NavLink[] = [
     href: "/check-region",
     label: "Check Region",
     icon: <svg className="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18-2.5-2.7-2.5-15.3 0-18Z"></path></svg>,
+    disabled: true,
   },
   {
     href: "/track",
@@ -45,6 +48,7 @@ const toolLinks: NavLink[] = [
     href: "/winrate",
     label: "Win Rate Calculator",
     icon: <svg className="ico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>,
+    disabled: true,
   },
 ];
 
