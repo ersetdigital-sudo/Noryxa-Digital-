@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { getUser, signOut, onAuthChange } from "@/lib/auth";
+import type { User } from "@supabase/supabase-js";
 
 interface HeaderProps {
   title: string;
@@ -10,11 +12,6 @@ interface HeaderProps {
   backHref?: string;
   backLabel?: string;
   rightBadge?: React.ReactNode;
-}
-
-interface NoryxaUser {
-  name: string;
-  email: string;
 }
 
 export default function Header({
@@ -26,14 +23,13 @@ export default function Header({
   rightBadge,
 }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [user, setUser] = useState<NoryxaUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    try {
-      const u = JSON.parse(localStorage.getItem("noryxaUser") || "null");
-      if (u?.email) setUser(u);
-    } catch {}
+    getUser().then(setUser);
+    const unsub = onAuthChange(setUser);
+    return () => unsub();
   }, []);
 
   useEffect(() => {
@@ -51,14 +47,17 @@ export default function Header({
     window.dispatchEvent(new CustomEvent("noryxa:toggle-sidebar"));
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await signOut();
     localStorage.removeItem("noryxaUser");
     setUser(null);
     setMenuOpen(false);
-    window.location.reload();
+    window.location.href = "/";
   };
 
-  const initial = (user?.name || user?.email || "?").trim().charAt(0).toUpperCase();
+  const email = user?.email || "";
+  const name = user?.user_metadata?.full_name || user?.user_metadata?.name || "";
+  const initial = (name || email || "?").trim().charAt(0).toUpperCase();
 
   return (
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b-2 border-[#eee]">
@@ -111,7 +110,7 @@ export default function Header({
             <div className="relative shrink-0" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen((v) => !v)}
-                aria-label={user ? `Akun ${user.name || user.email}` : "Masuk atau daftar"}
+                aria-label={user ? `Akun ${name || email}` : "Masuk atau daftar"}
                 aria-expanded={menuOpen}
                 className={`w-9 h-9 rounded-full grid place-items-center transition ${
                   user
@@ -134,8 +133,8 @@ export default function Header({
                   {user ? (
                     <>
                       <div className="px-2 py-2 mb-1 border-b-2 border-[#f2f2f2]">
-                        <p className="text-sm font-bold truncate">{user.name || "Pengguna Noryxa"}</p>
-                        <p className="text-xs text-[#717171] truncate">{user.email}</p>
+                        <p className="text-sm font-bold truncate">{name || "Pengguna Noryxa"}</p>
+                        <p className="text-xs text-[#717171] truncate">{email}</p>
                       </div>
                       <Link
                         href="/track"

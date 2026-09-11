@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+import { getUser, signOut, onAuthChange } from "@/lib/auth";
 
 export type NavLink = {
   href: string;
@@ -47,19 +48,6 @@ const toolLinks: NavLink[] = [
   },
 ];
 
-const accountLinks: NavLink[] = [
-  {
-    href: "/dashboard",
-    label: "My Dashboard",
-    icon: <svg className="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>,
-  },
-  {
-    href: "/login",
-    label: "Login / Register",
-    icon: <svg className="ico" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><path d="M10 17l5-5-5-5M15 12H3"></path></svg>,
-  },
-];
-
 export function NavItem({
   link,
   active,
@@ -96,8 +84,25 @@ export function NavItem({
   );
 }
 
+function useAuth() {
+  const [loggedIn, setLoggedIn] = useState(false);
+  useEffect(() => {
+    getUser().then((u) => setLoggedIn(!!u));
+    const unsub = onAuthChange((u) => setLoggedIn(!!u));
+    return () => unsub();
+  }, []);
+  return loggedIn;
+}
+
 export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const loggedIn = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    localStorage.removeItem("noryxaUser");
+    window.location.href = "/";
+  };
 
   return (
     <>
@@ -127,9 +132,39 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 
       <p className="eyebrow px-2 mb-2">Account</p>
       <nav className="flex flex-col gap-1">
-        {accountLinks.map((link) => (
-          <NavItem key={link.label} link={link} active={false} onNavigate={onNavigate} />
-        ))}
+        {loggedIn ? (
+          <>
+            <NavItem
+              link={{
+                href: "/dashboard",
+                label: "My Dashboard",
+                icon: <svg className="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>,
+              }}
+              active={pathname === "/dashboard"}
+              onNavigate={onNavigate}
+            />
+            <button
+              onClick={handleLogout}
+              className="navlink w-full text-left text-[#ff385c]"
+            >
+              <svg className="ico" viewBox="0 0 24 24">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                <path d="M10 17l5-5-5-5M15 12H3"></path>
+              </svg>
+              Logout
+            </button>
+          </>
+        ) : (
+          <NavItem
+            link={{
+              href: "/login",
+              label: "Login / Register",
+              icon: <svg className="ico" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><path d="M10 17l5-5-5-5M15 12H3"></path></svg>,
+            }}
+            active={pathname === "/login"}
+            onNavigate={onNavigate}
+          />
+        )}
       </nav>
     </>
   );

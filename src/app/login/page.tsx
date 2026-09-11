@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signIn, signUp, getUser } from "@/lib/auth";
 
 const BENEFITS = [
   {
@@ -28,22 +29,53 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [remember, setRemember] = useState(true);
   const [agreed, setAgreed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const saveUser = (e: React.FormEvent<HTMLFormElement>) => {
-    const data = new FormData(e.currentTarget);
-    const user = {
-      name: String(data.get("name") || "").trim(),
-      email: String(data.get("email") || "").trim(),
-    };
-    try {
-      localStorage.setItem("noryxaUser", JSON.stringify(user));
-    } catch {}
-  };
+  useEffect(() => {
+    getUser().then((u) => {
+      if (u) router.replace("/dashboard");
+    });
+  }, [router]);
 
-  const submit = (e: React.FormEvent<HTMLFormElement>) => {
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    saveUser(e);
-    router.push("/");
+    setError("");
+    setLoading(true);
+
+    const data = new FormData(e.currentTarget);
+    const email = String(data.get("email") || "").trim();
+    const password = String(data.get("password") || "");
+    const name = String(data.get("name") || "").trim();
+
+    try {
+      if (mode === "login") {
+        const { error: err } = await signIn(email, password);
+        if (err) {
+          setError(err.message === "Invalid login credentials"
+            ? "Email atau password salah."
+            : err.message);
+          return;
+        }
+      } else {
+        const { error: err } = await signUp(email, password, name);
+        if (err) {
+          setError(err.message === "User already registered"
+            ? "Email sudah terdaftar. Silakan masuk."
+            : err.message);
+          return;
+        }
+        // Also save to localStorage for backward compat
+        try {
+          localStorage.setItem("noryxaUser", JSON.stringify({ name, email }));
+        } catch {}
+      }
+      router.push("/");
+    } catch {
+      setError("Terjadi kesalahan. Coba lagi.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -185,11 +217,16 @@ export default function LoginPage() {
                   </a>
                 </div>
 
+                {error && (
+                  <p className="text-sm text-[#ff385c] font-semibold bg-[#fff5f7] border border-[#ffd1d9] rounded-xl px-4 py-2.5">{error}</p>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full bg-[#ff385c] hover:bg-[#e12b4d] transition text-white text-sm font-semibold rounded-full py-3.5 shadow-[0_10px_26px_rgba(255,56,92,.3)]"
+                  disabled={loading}
+                  className="w-full bg-[#ff385c] hover:bg-[#e12b4d] disabled:bg-[#ccc] transition text-white text-sm font-semibold rounded-full py-3.5 shadow-[0_10px_26px_rgba(255,56,92,.3)]"
                 >
-                  Masuk
+                  {loading ? "Memproses..." : "Masuk"}
                 </button>
 
                 <div className="flex items-center gap-3 my-1">
@@ -333,11 +370,16 @@ export default function LoginPage() {
                   </span>
                 </label>
 
+                {error && (
+                  <p className="text-sm text-[#ff385c] font-semibold bg-[#fff5f7] border border-[#ffd1d9] rounded-xl px-4 py-2.5">{error}</p>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full bg-[#ff385c] hover:bg-[#e12b4d] transition text-white text-sm font-semibold rounded-full py-3.5 shadow-[0_10px_26px_rgba(255,56,92,.3)]"
+                  disabled={loading}
+                  className="w-full bg-[#ff385c] hover:bg-[#e12b4d] disabled:bg-[#ccc] transition text-white text-sm font-semibold rounded-full py-3.5 shadow-[0_10px_26px_rgba(255,56,92,.3)]"
                 >
-                  Buat Akun
+                  {loading ? "Memproses..." : "Buat Akun"}
                 </button>
               </form>
             )}

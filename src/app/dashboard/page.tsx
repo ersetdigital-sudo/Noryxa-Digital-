@@ -3,12 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import AppLayout from "@/components/AppLayout";
+import { getUser, signOut, onAuthChange } from "@/lib/auth";
 import { findOrdersByEmail, type Order } from "@/lib/orders";
-
-interface NoryxaUser {
-  name: string;
-  email: string;
-}
+import type { User } from "@supabase/supabase-js";
 
 const GAME_IMAGES: Record<string, string> = {
   "Mobile Legends": "https://needmcp.com/storage/gallery/game-store/dd3ccb84374a3f9225f0515c31ac6910-large.avif",
@@ -24,10 +21,6 @@ function getGameImage(product: string): string {
     if (product.toLowerCase().includes(key.toLowerCase())) return url;
   }
   return "/images/3ba2d47c-f372-4e33-bbd8-712410f0f909.png";
-}
-
-function getInitial(name: string): string {
-  return (name || "?").trim().charAt(0).toUpperCase();
 }
 
 function rupiah(n: number): string {
@@ -49,20 +42,19 @@ interface SavedId {
 }
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<NoryxaUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [tab, setTab] = useState<TabKey>("overview");
   const [orders, setOrders] = useState<Order[]>([]);
   const [savedIds, setSavedIds] = useState<SavedId[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const u = JSON.parse(localStorage.getItem("noryxaUser") || "null");
-      if (u?.email) setUser(u);
-    } catch {}
-
-    const localIds = JSON.parse(localStorage.getItem("noryxaSavedIds") || "[]");
-    setSavedIds(localIds);
+    getUser().then((u) => {
+      setUser(u);
+      if (!u) setLoading(false);
+    });
+    const unsub = onAuthChange((u) => setUser(u));
+    return () => unsub();
   }, []);
 
   useEffect(() => {
@@ -76,7 +68,13 @@ export default function DashboardPage() {
     });
   }, [user]);
 
-  const handleLogout = () => {
+  useEffect(() => {
+    const localIds = JSON.parse(localStorage.getItem("noryxaSavedIds") || "[]");
+    setSavedIds(localIds);
+  }, []);
+
+  const handleLogout = async () => {
+    await signOut();
     localStorage.removeItem("noryxaUser");
     window.location.href = "/";
   };
@@ -119,6 +117,9 @@ export default function DashboardPage() {
     return "PENDING";
   };
 
+  const name = user?.user_metadata?.full_name || user?.user_metadata?.name || "";
+  const email = user?.email || "";
+
   if (!user) {
     return (
       <AppLayout>
@@ -155,13 +156,13 @@ export default function DashboardPage() {
             <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-[#ff385c]/15"></div>
             <div className="flex items-center gap-3 relative">
               <div className="w-14 h-14 rounded-2xl bg-[#ff385c] flex items-center justify-center font-extrabold text-lg flex-shrink-0">
-                {getInitial(user.name || user.email)}
+                {(name || email || "?").trim().charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-base font-extrabold leading-tight truncate">
-                  {user.name || "Pengguna Noryxa"}
+                  {name || "Pengguna Noryxa"}
                 </p>
-                <p className="text-[11px] text-white/70 truncate">{user.email}</p>
+                <p className="text-[11px] text-white/70 truncate">{email}</p>
                 <div className="mt-1.5 flex items-center gap-2">
                   <span className="text-[10px] font-extrabold bg-[#ff385c] text-white px-2 py-0.5 rounded-full">
                     MEMBER
