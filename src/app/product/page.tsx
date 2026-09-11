@@ -50,13 +50,19 @@ function ProductContent() {
   const denom = selectedDenom !== null ? denoms[selectedDenom] : null;
   const pay = selectedPay !== null ? pays[selectedPay] : null;
 
+  const tags = product?.tags || [];
+  const needsZone = tags.includes("zone");
+  const isUsername = tags.includes("username");
+  const idLabel = isUsername ? "Username" : "User ID";
+
   const fee = pay ? pay.fee : 0;
   const base = denom ? denom.price : 0;
   const d = Math.round(base * disc);
   const total = base ? base + fee - d : 0;
-  const ready = !!(denom && pay && uid.length >= 6);
+  const idValid = isUsername ? uid.length >= 3 : uid.length >= 6;
+  const ready = !!(denom && pay && idValid && (!needsZone || zone.length >= 4));
 
-  const nickname = uid.length >= 6 ? "Akun ditemukan: Player" + uid.slice(-4) : null;
+  const nickname = idValid ? (isUsername ? `Akun ditemukan: ${uid}` : "Akun ditemukan: Player" + uid.slice(-4)) : null;
 
   const handlePromo = async () => {
     const v = promo.trim().toUpperCase();
@@ -143,39 +149,44 @@ function ProductContent() {
               <section className="card p-5">
                 <div className="flex items-center gap-2.5 mb-4">
                   <span className="step-no">1</span>
-                  <h3 className="display text-base font-bold">Masukkan User ID</h3>
+                  <h3 className="display text-base font-bold">Masukkan {idLabel}</h3>
                 </div>
-                <div className="grid sm:grid-cols-[1fr_140px] gap-3">
+                <div className={`grid gap-3 ${needsZone ? "sm:grid-cols-[1fr_140px]" : ""}`}>
                   <div>
                     <label className="text-xs text-[#717171] mb-1.5 block" htmlFor="uid">
-                      User ID
+                      {idLabel}
                     </label>
                     <input
                       id="uid"
                       className="field"
-                      inputMode="numeric"
-                      placeholder="123456789"
+                      inputMode={isUsername ? "text" : "numeric"}
+                      placeholder={isUsername ? "username_roblox" : "123456789"}
                       value={uid}
                       onChange={(e) => setUid(e.target.value)}
                     />
                   </div>
-                  <div>
-                    <label className="text-xs text-[#717171] mb-1.5 block" htmlFor="zone">
-                      Zone ID
-                    </label>
-                    <input
-                      id="zone"
-                      className="field"
-                      inputMode="numeric"
-                      placeholder="1234"
-                      value={zone}
-                      onChange={(e) => setZone(e.target.value)}
-                    />
-                  </div>
+                  {needsZone && (
+                    <div>
+                      <label className="text-xs text-[#717171] mb-1.5 block" htmlFor="zone">
+                        Zone ID
+                      </label>
+                      <input
+                        id="zone"
+                        className="field"
+                        inputMode="numeric"
+                        placeholder="1234"
+                        value={zone}
+                        onChange={(e) => setZone(e.target.value)}
+                      />
+                    </div>
+                  )}
                 </div>
                 <p className="text-xs text-[#717171] mt-3 leading-relaxed">
-                  Buka game → tap avatar di kiri atas → menu Profil. ID akan terlihat seperti{" "}
-                  <b className="text-[#111]">123456789 (1234)</b>.
+                  {isUsername
+                    ? <>Buka Roblox → tap profil kamu di kiri bawah → salin <b className="text-[#111]">Username</b> persis seperti tertulis.</>
+                    : needsZone
+                    ? <>Buka game → tap avatar di kiri atas → menu Profil. ID akan terlihat seperti <b className="text-[#111]">123456789 (1234)</b>.</>
+                    : <>Buka game → tap avatar/profil kamu → salin <b className="text-[#111]">{idLabel}</b> yang terlihat di halaman profil.</>}
                 </p>
                 {nickname && (
                   <p className="text-xs mt-2 text-[#0a7d43] font-semibold">{nickname}</p>
@@ -276,7 +287,7 @@ function ProductContent() {
               <section className="card p-5">
                 <h3 className="display text-base font-bold mb-2">Deskripsi</h3>
                 <p className="text-sm text-[#4a4a4a] leading-relaxed">
-                  Top up {gameName} langsung ke User ID tanpa login akun.
+                  Top up {gameName} langsung ke {idLabel} tanpa login akun.
                   Transaksi diproses otomatis 24 jam, rata-rata masuk dalam 3 detik setelah
                   pembayaran terkonfirmasi. Jika saldo tidak masuk, dana dikembalikan 100%.
                 </p>
@@ -296,9 +307,9 @@ function ProductContent() {
                   <dd className="font-semibold text-right">{denom ? denom.label : "—"}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt className="text-[#717171]">User ID</dt>
+                  <dt className="text-[#717171]">{idLabel}</dt>
                   <dd className="font-semibold text-right">
-                    {uid ? uid + (zone ? " (" + zone + ")" : "") : "—"}
+                    {uid ? uid + (needsZone && zone ? " (" + zone + ")" : "") : "—"}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">
@@ -330,7 +341,7 @@ function ProductContent() {
               <p className="text-[11px] text-[#717171] text-center mt-2.5">
                 {ready
                   ? "Pesanan siap diproses otomatis 24 jam."
-                  : "Lengkapi User ID, nominal, dan metode bayar."}
+                  : `Lengkapi ${idLabel}${needsZone ? " + Zone ID" : ""}, nominal, dan metode bayar.`}
               </p>
             </aside>
           </div>
