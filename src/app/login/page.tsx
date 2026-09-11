@@ -58,13 +58,19 @@ export default function LoginPage() {
           return;
         }
       } else {
-        const { error: err } = await signUp(email, password, name);
+        const { data, error: err } = await signUp(email, password, name);
         if (err) {
-          setError(err.message === "User already registered"
-            ? "Email sudah terdaftar. Silakan masuk."
-            : err.message);
+          console.error("[supabase] signup error:", err);
+          if (err.message.includes("already registered")) {
+            setError("Email sudah terdaftar. Silakan masuk.");
+          } else if (err.message.includes("valid password")) {
+            setError("Password harus minimal 6 karakter.");
+          } else {
+            setError(err.message);
+          }
           return;
         }
+        console.log("[supabase] signup success:", data);
         // Also save to localStorage for backward compat
         try {
           localStorage.setItem("noryxaUser", JSON.stringify({ name, email }));
