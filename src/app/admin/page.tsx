@@ -64,6 +64,7 @@ export default function AdminPage() {
 
   const [np, setNp] = useState({ name: "", category: "Mobile Games", price: 0, img: "/images/3ba2d47c-f372-4e33-bbd8-712410f0f909.png", rank: 99, tags: "" });
   const [nd, setNd] = useState({ product_name: "Mobile Legends", label: "", price: 0, rank: 99 });
+  const [denomGame, setDenomGame] = useState("Mobile Legends");
   const [npay, setNpay] = useState({ label: "", kind: "E-wallet", fee: 0, rank: 99, img: "" });
   const [npr, setNpr] = useState({ code: "", disc_pct: 10 });
   const [uploading, setUploading] = useState("");
@@ -488,38 +489,57 @@ export default function AdminPage() {
           )}
 
           {/* ============ DENOMS ============ */}
-          {tab === "denoms" && (
+          {tab === "denoms" && (() => {
+            const gameNames = [...new Set(denoms.map((d) => d.product_name))];
+            const filteredDenoms = denoms.filter((d) => d.product_name === denomGame);
+            return (
             <div className="space-y-4">
+              {/* Game tabs */}
+              <div className="bg-white rounded-2xl border border-[#e5e5e5] p-4">
+                <p className="text-xs font-bold text-[#717171] uppercase tracking-wider mb-3">Pilih Game</p>
+                <div className="flex flex-wrap gap-2">
+                  {gameNames.map((g) => (
+                    <button key={g} onClick={() => { setDenomGame(g); setNd({ ...nd, product_name: g }); }}
+                      className={`text-xs font-bold px-4 py-2 rounded-xl border transition ${denomGame === g ? "bg-[#ff385c] text-white border-[#ff385c]" : "border-[#e5e5e5] text-[#717171] hover:border-[#ff385c] hover:text-[#ff385c]"}`}>
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Add form */}
               <div className="bg-white rounded-2xl border border-[#e5e5e5] p-5">
-                <h3 className="font-bold text-sm text-[#111] mb-3">Tambah Nominal</h3>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-                  <input className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff385c] transition" placeholder="Nama produk" value={nd.product_name} onChange={(e) => setNd({ ...nd, product_name: e.target.value })} />
+                <h3 className="font-bold text-sm text-[#111] mb-3">Tambah Nominal — {denomGame}</h3>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   <input className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff385c] transition" placeholder="Label (86 Diamonds)" value={nd.label} onChange={(e) => setNd({ ...nd, label: e.target.value })} />
                   <input className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff385c] transition" type="number" placeholder="Harga" value={nd.price || ""} onChange={(e) => setNd({ ...nd, price: Number(e.target.value) })} />
                   <input className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff385c] transition" type="number" placeholder="Rank" value={nd.rank} onChange={(e) => setNd({ ...nd, rank: Number(e.target.value) })} />
                 </div>
                 <button onClick={() => guard("add-d", async () => {
                   if (!nd.label) throw new Error("kosong");
-                  await supabase.from("denoms").insert(nd);
-                  setNd({ product_name: nd.product_name, label: "", price: 0, rank: 99 });
+                  await supabase.from("denoms").insert({ ...nd, product_name: denomGame });
+                  setNd({ ...nd, label: "", price: 0, rank: 99 });
                 }, "Nominal ditambahkan")} className="mt-3 bg-[#ff385c] hover:bg-[#e12b4d] transition text-white text-sm font-semibold rounded-xl px-6 py-2.5">Tambah</button>
               </div>
 
+              {/* Denom table per game */}
               <div className="bg-white rounded-2xl border border-[#e5e5e5] overflow-hidden">
-                <div className="px-5 py-4 border-b border-[#e5e5e5]">
-                  <h3 className="font-bold text-sm text-[#111]">Semua Nominal ({denoms.length})</h3>
+                <div className="px-5 py-4 border-b border-[#e5e5e5] flex items-center justify-between">
+                  <h3 className="font-bold text-sm text-[#111]">{denomGame} — {filteredDenoms.length} nominal</h3>
                 </div>
+                {filteredDenoms.length === 0 ? (
+                  <p className="px-5 py-8 text-sm text-[#9a9a9a] text-center">Belum ada nominal untuk game ini.</p>
+                ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[640px]">
+                  <table className="w-full min-w-[500px]">
                     <thead className="bg-[#fafafa]">
-                      <tr><th className={th}>Produk</th><th className={th}>Label</th><th className={th}>Harga</th><th className={th}>Rank</th><th className={th}>Aksi</th></tr>
+                      <tr><th className={th}>Label</th><th className={th}>Harga</th><th className={th}>Rank</th><th className={th}>Aksi</th></tr>
                     </thead>
                     <tbody className="divide-y divide-[#f0f0f0]">
-                      {denoms.map((d) => (
+                      {filteredDenoms.map((d) => (
                         <tr key={d.id} className="hover:bg-[#fafafa]">
-                          <td className={td}>{editDenom?.id === d.id ? <input className="bg-white border border-[#e5e5e5] rounded-lg px-2.5 py-1.5 text-xs w-32 focus:outline-none focus:border-[#ff385c]" value={editDenom.product_name} onChange={(e) => setEditDenom({ ...editDenom, product_name: e.target.value })} /> : <span className="text-xs">{d.product_name}</span>}</td>
-                          <td className={td}>{editDenom?.id === d.id ? <input className="bg-white border border-[#e5e5e5] rounded-lg px-2.5 py-1.5 text-xs w-36 focus:outline-none focus:border-[#ff385c]" value={editDenom.label} onChange={(e) => setEditDenom({ ...editDenom, label: e.target.value })} /> : <span className="font-semibold">{d.label}</span>}</td>
-                          <td className={td}>{editDenom?.id === d.id ? <input type="number" className="bg-white border border-[#e5e5e5] rounded-lg px-2.5 py-1.5 text-xs w-24 focus:outline-none focus:border-[#ff385c]" value={editDenom.price} onChange={(e) => setEditDenom({ ...editDenom, price: Number(e.target.value) })} /> : rupiah(d.price)}</td>
+                          <td className={td}>{editDenom?.id === d.id ? <input className="bg-white border border-[#e5e5e5] rounded-lg px-2.5 py-1.5 text-xs w-40 focus:outline-none focus:border-[#ff385c]" value={editDenom.label} onChange={(e) => setEditDenom({ ...editDenom, label: e.target.value })} /> : <span className="font-semibold">{d.label}</span>}</td>
+                          <td className={td}>{editDenom?.id === d.id ? <input type="number" className="bg-white border border-[#e5e5e5] rounded-lg px-2.5 py-1.5 text-xs w-28 focus:outline-none focus:border-[#ff385c]" value={editDenom.price} onChange={(e) => setEditDenom({ ...editDenom, price: Number(e.target.value) })} /> : rupiah(d.price)}</td>
                           <td className={td}>{editDenom?.id === d.id ? <input type="number" className="bg-white border border-[#e5e5e5] rounded-lg px-2.5 py-1.5 text-xs w-16 focus:outline-none focus:border-[#ff385c]" value={editDenom.rank} onChange={(e) => setEditDenom({ ...editDenom, rank: Number(e.target.value) })} /> : d.rank}</td>
                           <td className={td}>
                             {editDenom?.id === d.id ? (
@@ -539,9 +559,11 @@ export default function AdminPage() {
                     </tbody>
                   </table>
                 </div>
+                )}
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {/* ============ PAYS ============ */}
           {tab === "pays" && (
