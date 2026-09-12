@@ -20,7 +20,7 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children, searchRef, onSearch }: AppLayoutProps) {
   const pathname = usePathname();
-  const title = PAGE_TITLES[pathname] || "Noryxa Digital";
+  const title = PAGE_TITLES[pathname] ?? "";
   const showHeader = pathname !== "/login";
 
   return (

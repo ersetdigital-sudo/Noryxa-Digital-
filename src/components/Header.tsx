@@ -90,7 +90,7 @@ export default function Header({
           </Link>
         )}
 
-        <h1 className="display text-base sm:text-lg font-bold truncate">{title}</h1>
+        {title && <h1 className="display text-base sm:text-lg font-bold truncate">{title}</h1>}
 
         {rightBadge && <div className="ml-auto">{rightBadge}</div>}
 
