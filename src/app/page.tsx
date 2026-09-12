@@ -173,7 +173,7 @@ export default function HomePage() {
 
           {/* FILTER + SORT STRIP */}
           <div className="flex items-center gap-2 mt-4 bg-[#f7f7f7] rounded-[16px] px-2.5 sm:px-4 py-2.5">
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0 overflow-hidden">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
               <span className="hidden sm:inline text-xs font-bold text-[#717171] uppercase tracking-wider mr-1">
                 Filter
               </span>
