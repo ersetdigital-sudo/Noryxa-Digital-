@@ -382,7 +382,6 @@ function ProductContent() {
                       <img src={heroImg} alt={gameName} className="w-14 h-14 rounded-[12px] object-cover shadow-md border-2 border-white" />
                     )}
                     <div>
-                      <p className="text-[#ff385c] text-[10px] font-bold uppercase tracking-wider">Noryxa Digital</p>
                       <h3 className="font-bold text-[#222] leading-tight">{gameName}</h3>
                     </div>
                   </div>
