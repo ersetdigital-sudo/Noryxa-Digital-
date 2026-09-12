@@ -13,6 +13,7 @@ const HERO_IMAGES: Record<string, string> = {
   "PUBG Mobile": "https://res.cloudinary.com/dqjh7utdb/image/upload/v1789178318/cx0fedlibrajippie7uz.jpg",
   "Honor of Kings": "https://res.cloudinary.com/dqjh7utdb/image/upload/v1789178391/tdtryaddoumqccrluqag.png",
   "Magic Chess": "https://res.cloudinary.com/dqjh7utdb/image/upload/v1789178449/siazsguakmkktit7tjap.jpg",
+  "Roblox": "https://res.cloudinary.com/dqjh7utdb/image/upload/v1789178523/kydtdljvhminwuqhkhsr.png",
 };
 
 export default function ProductPage() {
