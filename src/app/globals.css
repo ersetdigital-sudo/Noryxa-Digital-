@@ -189,10 +189,8 @@
     background: #ffffff;
   }
 
-  @media (hover: none) and (pointer: coarse) {
-    *:focus {
-      outline: none;
-    }
+  *:focus {
+    outline: none;
   }
 
   h1, h2, h3, .display {
