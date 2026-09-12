@@ -5,7 +5,6 @@ import Header from "@/components/Header";
 import { usePathname } from "next/navigation";
 
 const PAGE_TITLES: Record<string, string> = {
-  "/": "Gaming Store Catalog",
   "/product": "Detail Produk",
   "/track": "Cek Transaksi",
   "/payment": "Pembayaran",
