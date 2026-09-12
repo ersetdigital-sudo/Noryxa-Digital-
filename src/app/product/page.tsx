@@ -7,6 +7,11 @@ import AppLayout from "@/components/AppLayout";
 import { rupiah, type Product } from "@/lib/data";
 import { fetchDenoms, fetchPays, fetchProducts, checkPromo, type Denom, type Pay } from "@/lib/catalog";
 
+const HERO_IMAGES: Record<string, string> = {
+  "Mobile Legends: Bang Bang": "https://res.cloudinary.com/dqjh7utdb/image/upload/v1789177908/hhjuudelwtasw4ffkw0n.jpg",
+  "Free Fire": "https://res.cloudinary.com/dqjh7utdb/image/upload/v1789177987/p8w1wa05kqz0ykvtbmvy.jpg",
+};
+
 export default function ProductPage() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-[#f7f7f7] grid place-items-center text-sm text-[#717171]">Memuat...</div>}>
@@ -54,6 +59,7 @@ function ProductContent() {
   const needsZone = tags.includes("zone");
   const isUsername = tags.includes("username");
   const idLabel = isUsername ? "Username" : "User ID";
+  const heroImg = HERO_IMAGES[gameName] || product?.img || "";
 
   const fee = pay ? pay.fee : 0;
   const base = denom ? denom.price : 0;
@@ -123,8 +129,8 @@ function ProductContent() {
         <section className="relative lg:hidden">
           <div className="aspect-[16/10] w-full overflow-hidden bg-[#111318]">
             <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-transparent pointer-events-none z-10" />
-            {product?.img && (
-              <img src={product.img} alt={gameName} className="w-full h-full object-cover" />
+            {heroImg && (
+              <img src={heroImg} alt={gameName} className="w-full h-full object-cover" />
             )}
           </div>
           <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-10">
@@ -365,15 +371,15 @@ function ProductContent() {
             <div className="sticky top-24 flex flex-col gap-4">
               {/* Game Info Card */}
               <div className="bg-white rounded-[20px] border border-[rgba(0,0,0,0.08)] shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.04)_0px_2px_6px,rgba(0,0,0,0.08)_0px_4px_8px] overflow-hidden">
-                {product?.img && (
-                  <div className="h-24 bg-cover bg-center relative" style={{ backgroundImage: `url(${product.img})` }}>
+                {heroImg && (
+                  <div className="h-24 bg-cover bg-center relative" style={{ backgroundImage: `url(${heroImg})` }}>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   </div>
                 )}
                 <div className="p-5">
                   <div className="flex items-center gap-3 mb-3 -mt-10 relative z-10">
-                    {product?.img && (
-                      <img src={product.img} alt={gameName} className="w-14 h-14 rounded-[12px] object-cover shadow-md border-2 border-white" />
+                    {heroImg && (
+                      <img src={heroImg} alt={gameName} className="w-14 h-14 rounded-[12px] object-cover shadow-md border-2 border-white" />
                     )}
                     <div>
                       <p className="text-[#ff385c] text-[10px] font-bold uppercase tracking-wider">Noryxa Digital</p>
