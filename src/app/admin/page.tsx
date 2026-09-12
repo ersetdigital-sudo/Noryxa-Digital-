@@ -71,6 +71,8 @@ export default function AdminPage() {
   const [uploading, setUploading] = useState("");
   const addPayImgRef = useRef<HTMLInputElement>(null);
   const editPayImgRef = useRef<HTMLInputElement>(null);
+  const addProdImgRef = useRef<HTMLInputElement>(null);
+  const editProdImgRef = useRef<HTMLInputElement>(null);
 
   const flash = (t: string) => { setMsg(t); setTimeout(() => setMsg(""), 2500); };
 
@@ -392,7 +394,17 @@ export default function AdminPage() {
                     {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
                   </select>
                   <RupiahInput value={np.price} onChange={(n) => setNp({ ...np, price: n })} placeholder="Harga mulai" />
-                  <input className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff385c] transition" placeholder="Path gambar" value={np.img} onChange={(e) => setNp({ ...np, img: e.target.value })} />
+                  <div className="flex items-center gap-2.5">
+                    <button type="button" onClick={() => addProdImgRef.current?.click()} disabled={uploading === "add-prod"} className="shrink-0 border border-[#e5e5e5] hover:border-[#ff385c] rounded-xl px-4 py-2.5 text-xs font-bold text-[#717171] hover:text-[#ff385c] transition">
+                      {uploading === "add-prod" ? "Upload…" : np.img && np.img !== "/images/3ba2d47c-f372-4e33-bbd8-712410f0f909.png" ? "Ganti" : "Upload Gambar"}
+                    </button>
+                    {np.img && np.img !== "/images/3ba2d47c-f372-4e33-bbd8-712410f0f909.png" && <img src={np.img} alt="" className="w-10 h-10 rounded-lg object-cover border border-[#e5e5e5]" />}
+                  </div>
+                  <input ref={addProdImgRef} type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                    const f = e.target.files?.[0]; if (!f) return;
+                    setUploading("add-prod"); const url = await uploadImage(f);
+                    if (url) setNp((p) => ({ ...p, img: url })); setUploading(""); e.target.value = "";
+                  }} />
                   <input className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff385c] transition" type="number" placeholder="Rank" value={np.rank} onChange={(e) => setNp({ ...np, rank: Number(e.target.value) })} />
                   <input className="bg-white border border-[#e5e5e5] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#ff385c] transition" placeholder="Tags (promo,instant)" value={np.tags} onChange={(e) => setNp({ ...np, tags: e.target.value })} />
                 </div>
@@ -430,7 +442,15 @@ export default function AdminPage() {
                                 <img src={editProduct.img} alt="" className="w-8 h-8 rounded-lg object-cover" />
                                 <div className="flex flex-col gap-1.5">
                                   <input className="bg-white border border-[#e5e5e5] rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-[#ff385c]" value={editProduct.name} onChange={(e) => setEditProduct({ ...editProduct, name: e.target.value })} />
-                                  <input className="bg-white border border-[#e5e5e5] rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-[#ff385c]" value={editProduct.img} onChange={(e) => setEditProduct({ ...editProduct, img: e.target.value })} />
+                                  <div className="flex items-center gap-1.5">
+                                    <input className="bg-white border border-[#e5e5e5] rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-[#ff385c] flex-1 min-w-0" value={editProduct.img} onChange={(e) => setEditProduct({ ...editProduct, img: e.target.value })} />
+                                    <button type="button" onClick={() => editProdImgRef.current?.click()} disabled={uploading === p.id} className="text-[10px] font-bold text-[#ff385c] hover:underline whitespace-nowrap">{uploading === p.id ? "…" : "Upload"}</button>
+                                  </div>
+                                  <input ref={editProdImgRef} type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                    const f = e.target.files?.[0]; if (!f) return;
+                                    setUploading(p.id); const url = await uploadImage(f);
+                                    if (url) setEditProduct({ ...editProduct, img: url }); setUploading(""); e.target.value = "";
+                                  }} />
                                 </div>
                               </div>
                             ) : (
