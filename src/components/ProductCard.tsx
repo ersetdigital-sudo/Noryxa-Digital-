@@ -29,7 +29,6 @@ export default function ProductCard({ product }: ProductCardProps) {
       <p className="clamp2 text-[13px] font-semibold mt-2.5 leading-snug group-hover:text-[#ff385c] transition">
         {name}
       </p>
-      <p className="text-[11px] text-[#717171] mt-0.5">{category}</p>
       <p className="text-[13px] font-bold text-[#ff385c] mt-1">
         Mulai {rupiah(price)}
       </p>
