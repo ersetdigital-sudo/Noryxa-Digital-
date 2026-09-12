@@ -10,6 +10,7 @@ import { fetchDenoms, fetchPays, fetchProducts, checkPromo, type Denom, type Pay
 const HERO_IMAGES: Record<string, string> = {
   "Mobile Legends: Bang Bang": "https://res.cloudinary.com/dqjh7utdb/image/upload/v1789177908/hhjuudelwtasw4ffkw0n.jpg",
   "Free Fire": "https://res.cloudinary.com/dqjh7utdb/image/upload/v1789177987/p8w1wa05kqz0ykvtbmvy.jpg",
+  "PUBG Mobile": "https://res.cloudinary.com/dqjh7utdb/image/upload/v1789178318/cx0fedlibrajippie7uz.jpg",
 };
 
 export default function ProductPage() {
