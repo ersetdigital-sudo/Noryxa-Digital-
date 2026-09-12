@@ -327,6 +327,14 @@
     display: none;
   }
 
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
   .tile-art {
     aspect-ratio: 1 / 1;
     border-radius: 14px;
